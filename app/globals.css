@@ -7,6 +7,7 @@
   --accent: #A30000;
   --secondary: #850000;
   --active: #6d0000;
+  --lightbg: #F2F0EF;
 }
 
 @theme inline {
@@ -18,6 +19,7 @@
   --font-body: var(--font-body);
   --color-secondary: var(--secondary);
   --color-active: var(--active);
+  --color-lightbg: var(--lightbg)
 }
 
 @media (prefers-color-scheme: dark) {

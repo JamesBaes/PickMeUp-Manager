@@ -1,17 +1,18 @@
 import Image from "next/image";
-
-
-
-
-// I'll setup this page, planning on making it redirect to /login or /home depending on auth state
+import LoginForm from "@/components/LoginForm";
 
 export default function Page() {
-
-
-  
   return (
-  <div>
-
-  </div>
-  );    
+    <div className="flex h-screen w-screen overflow-hidden">
+      <div className="relative w-3/5">
+        <Image src="/burger-login.png" alt="Burger" fill className="object-cover" priority />
+      </div>
+      
+      <div className="w-2/5 bg-lightbg flex items-center justify-center">
+        <div className="w-full px-12">
+          <LoginForm />
+        </div>
+      </div>
+    </div>
+  );
 }

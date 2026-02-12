@@ -33,23 +33,41 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user }} = await supabase.auth.getUser();
 
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user?.id)
+    .single();
+  
+  const role = profile?.role;
+
   const path = request.nextUrl.pathname;
-
-
-  const protectedRoutes = ["", "/order-history", "/favorites"]
-  const authRoutes = ["/login", "/"]
-
-  if (protectedRoutes.some(route => path.startsWith(route)) && !user) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    
+  const protectedRoutes = ["/admin", "/staff"]
+  const isProtectedRoute = protectedRoutes.some((route) => route.startsWith(route))
+  
+  if (!user && path === '/') {
+    return response
   }
 
-  if (authRoutes.some(route => path.startsWith(route)) && user) {
-    return NextResponse.redirect(new URL("/home", request.url))
+  // unauthenticed users get redirected back to login
+  if (!user && isProtectedRoute) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // staff accessing admin routes redirect to staff
+  if (user && path.startsWith('/admin') && role ==='staff') {
+    return NextResponse.redirect(new URL('/staff', request.url))
+  }
+
+  // admin accessing staff routes redirect to admin
+  if (user && path.startsWith('/staff') && role ==='admin') {
+    return NextResponse.redirect(new URL('/admin', request.url))
   }
 
   return response
 }
-
 
 export const config = {
   matcher: [
