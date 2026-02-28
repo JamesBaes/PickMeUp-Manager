@@ -8,6 +8,14 @@
   --secondary: #850000;
   --active: #6d0000;
   --lightbg: #F2F0EF;
+  --dashboard-page: #f4f4f4;
+  --dashboard-panel: #efefef;
+  --dashboard-card: #f8f8f8;
+  --dashboard-border: #d8d8d8;
+  --dashboard-success: #2c7d59;
+  --dashboard-success-soft: #baf7d1;
+  --dashboard-ring: #34d7bf;
+  --dashboard-ring-track: #ea8ea5;
 }
 
 @theme inline {
@@ -19,7 +27,15 @@
   --font-body: var(--font-body);
   --color-secondary: var(--secondary);
   --color-active: var(--active);
-  --color-lightbg: var(--lightbg)
+  --color-lightbg: var(--lightbg);
+  --color-dashboard-page: var(--dashboard-page);
+  --color-dashboard-panel: var(--dashboard-panel);
+  --color-dashboard-card: var(--dashboard-card);
+  --color-dashboard-border: var(--dashboard-border);
+  --color-dashboard-success: var(--dashboard-success);
+  --color-dashboard-success-soft: var(--dashboard-success-soft);
+  --color-dashboard-ring: var(--dashboard-ring);
+  --color-dashboard-ring-track: var(--dashboard-ring-track);
 }
 
 @media (prefers-color-scheme: dark) {

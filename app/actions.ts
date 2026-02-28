@@ -1,8 +1,12 @@
 'use server'
 
-import { createClient } from "@/utils/server";
+import { createClient, hasSupabaseServerConfig } from "@/utils/server";
 
 export async function login(email: string, password: string) {
+
+  if (!hasSupabaseServerConfig) {
+    return { error: "Supabase is not configured yet. Add keys in .env.local to enable login." };
+  }
 
   if (!email || !email.includes("@")) {
     return { error: "Please enter a valid email" };
