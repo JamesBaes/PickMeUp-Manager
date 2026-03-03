@@ -38,9 +38,8 @@ export default async function StaffDashboardPage() {
                 <td className="py-3 font-body">{order.customer}</td>
                 <td className="py-3 font-body">{order.total}</td>
                 <td className="py-3">
-                  <div className="h-9 w-32 rounded-xl bg-dashboard-success-soft text-dashboard-success flex items-center justify-between px-4 font-body">
+                  <div className="h-9 w-32 rounded-xl bg-dashboard-success-soft text-dashboard-success flex items-center justify-center px-4 font-body">
                     <span>{order.status}</span>
-                    <span>▾</span>
                   </div>
                 </td>
               </tr>
@@ -55,7 +54,7 @@ export default async function StaffDashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-dashboard-border bg-dashboard-card p-5 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-72">
+      <section className="rounded-xl border border-dashboard-border bg-dashboard-card p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-72">
         <div>
           <div className="flex items-center gap-3 mb-4">
             <h2 className="font-heading text-5xl text-slate-700">Top Selling</h2>
@@ -64,17 +63,13 @@ export default async function StaffDashboardPage() {
 
           <ul className="space-y-2">
             {dashboardData.topSellingItems.map((item) => (
-              <li key={item.rank} className="grid grid-cols-[2rem_1fr_auto] text-slate-600 font-body">
+              <li key={item.rank} className="grid grid-cols-[2rem_12rem_4rem] text-slate-600 font-body">
                 <span>{item.rank}</span>
                 <span>{item.name}</span>
                 <span>{item.sold}</span>
               </li>
             ))}
           </ul>
-        </div>
-
-        <div>
-          <h2 className="font-heading text-5xl text-slate-700 leading-tight">Key Analytics Performance Overview</h2>
         </div>
 
         <div className="flex flex-col items-center lg:items-start">

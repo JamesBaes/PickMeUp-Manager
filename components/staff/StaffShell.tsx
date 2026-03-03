@@ -22,11 +22,14 @@ const topNavItems: NavItem[] = [
 const sideNavItems: Omit<NavItem, "label">[] = [
   { href: "/staff", icon: <GridIcon /> },
   { href: "/staff/orders", icon: <OrdersIcon /> },
-  { href: "/staff/menu", icon: <InventoryIcon /> },
+  { href: "/staff/completed", icon: <CompletedOrdersIcon /> },
 ];
 
 export default function StaffShell({ children }: StaffShellProps) {
   const pathname = usePathname();
+
+  const isTopNavActive = (href: string) => pathname === href;
+  const isSideNavActive = (href: string) => pathname === href;
 
   return (
     <div className="min-h-screen bg-dashboard-page flex">
@@ -37,7 +40,7 @@ export default function StaffShell({ children }: StaffShellProps) {
 
         <nav className="flex flex-col items-center gap-4 mt-6">
           {sideNavItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = isSideNavActive(item.href);
 
             return (
               <Link
@@ -67,7 +70,7 @@ export default function StaffShell({ children }: StaffShellProps) {
         <div className="rounded-xl border border-dashboard-border bg-dashboard-panel p-4">
           <div className="mb-4 flex gap-4">
             {topNavItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isTopNavActive(item.href);
 
               return (
                 <Link
@@ -131,6 +134,15 @@ function LogoutIcon() {
       <path d="M15 12H3" />
       <path d="M21 3h-7v4" />
       <path d="M14 17v4h7V3" />
+    </svg>
+  );
+}
+
+function CompletedOrdersIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.2 12.1l2.4 2.4 5.2-5.2" />
     </svg>
   );
 }

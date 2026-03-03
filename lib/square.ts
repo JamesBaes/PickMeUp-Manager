@@ -1,5 +1,3 @@
-import { payments } from "square";
-
 export function getSquareClient() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { SquareClient, SquareEnvironment } = require("square");

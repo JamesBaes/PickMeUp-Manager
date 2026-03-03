@@ -23,7 +23,8 @@ export interface StaffDashboardData {
   acceptedOrdersPercent: number;
 }
 
-const dummyDashboardData: StaffDashboardData = {
+// MOCK DATA: Used for UI development until real tables are connected.
+const mockStaffDashboardData: StaffDashboardData = {
   dateLabel: "Date: Today",
   statusLabel: "Status: Active",
   searchPlaceholder: "Search",
@@ -47,20 +48,59 @@ const dummyDashboardData: StaffDashboardData = {
 };
 
 export async function getStaffDashboardData(): Promise<StaffDashboardData> {
-  // Keep UI development independent from backend.
-  // Replace this return with Supabase fetch once tables are ready.
-  return dummyDashboardData;
+  // MOCK MODE: Keep this active while backend APIs/tables are not finalized.
+  return mockStaffDashboardData;
 
-  // Example future flow:
+  // REAL DB FETCH (UNCOMMENT WHEN READY):
+  // import { createClient } from "@/utils/server";
+  //
   // const supabase = await createClient();
-  // const { data: incomingOrders } = await supabase.from("orders").select("...");
-  // const { data: topSellingItems } = await supabase.from("menu_items").select("...");
+  //
+  // const { data: incomingOrders, error: incomingOrdersError } = await supabase
+  //   .from("orders")
+  //   .select("id, created_at, customer_name, total_amount, status")
+  //   .order("created_at", { ascending: false })
+  //   .limit(5);
+  //
+  // const { data: topSellingItems, error: topSellingItemsError } = await supabase
+  //   .from("menu_items")
+  //   .select("name, sold_count")
+  //   .order("sold_count", { ascending: false })
+  //   .limit(7);
+  //
+  // if (incomingOrdersError || topSellingItemsError) {
+  //   throw new Error("Failed to load dashboard data from the database");
+  // }
+  //
+  // const mappedIncomingOrders: StaffIncomingOrder[] = (incomingOrders ?? []).map((order: any) => ({
+  //   id: String(order.id),
+  //   created: new Date(order.created_at).toLocaleString("en-US", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     day: "2-digit",
+  //     month: "short",
+  //   }),
+  //   customer: order.customer_name,
+  //   total: `$${Number(order.total_amount).toFixed(2)}`,
+  //   status: order.status as StaffOrderStatus,
+  // }));
+  //
+  // const mappedTopSellingItems: TopSellingItem[] = (topSellingItems ?? []).map((item: any, index: number) => ({
+  //   rank: index + 1,
+  //   name: item.name,
+  //   sold: Number(item.sold_count ?? 0),
+  // }));
+  //
+  // const totalOrders = mappedIncomingOrders.length;
+  // const acceptedOrders = mappedIncomingOrders.filter((order) => order.status === "Active").length;
+  // const acceptedOrdersPercent = totalOrders === 0 ? 0 : Math.round((acceptedOrders / totalOrders) * 100);
+  //
   // return {
   //   dateLabel: "Date: Today",
   //   statusLabel: "Status: Active",
   //   searchPlaceholder: "Search",
-  //   incomingOrders: mapOrders(incomingOrders),
-  //   topSellingItems: mapTopSelling(topSellingItems),
-  //   acceptedOrdersPercent: calculateAcceptedOrders(incomingOrders),
+  //   incomingOrders: mappedIncomingOrders,
+  //   topSellingItems: mappedTopSellingItems,
+  //   acceptedOrdersPercent,
   // };
 }

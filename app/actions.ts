@@ -5,7 +5,8 @@ import { createClient, hasSupabaseServerConfig } from "@/utils/server";
 export async function login(email: string, password: string) {
 
   if (!hasSupabaseServerConfig) {
-    return { error: "Supabase is not configured yet. Add keys in .env.local to enable login." };
+    // MOCK MODE: Allow dashboard access during local UI development without Supabase.
+    return { success: true, redirectTo: "/staff" };
   }
 
   if (!email || !email.includes("@")) {
