@@ -1,20 +1,20 @@
 import supabase from "@/utils/client";
 
-export const fetchAdmins = async () => {
+export const fetchStaff = async () => {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role')
-    .eq('role', 'admin')
+    .eq('role', 'staff')
 
   if (error) {
-    console.error('Error fetching admins:', error)
+    console.error('Error fetching staff:', error)
     return [];
   }
   return data;
 }
 
-export const addAdmin = async (name: string, email: string) => {
-  const res = await fetch('/api/admin', {
+export const addStaff = async (name: string, email: string) => {
+  const res = await fetch('/api/staff', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email }),
@@ -22,16 +22,15 @@ export const addAdmin = async (name: string, email: string) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    console.error(`Error adding admin [${res.status}]:`, err);
+    console.error(`Error adding staff [${res.status}]:`, err);
     return null;
   }
 
   return res.json();
 };
 
-  
-export const deactivateAdmin = async (id: string) => {
-  const res = await fetch('/api/admin', {
+export const removeStaff = async (id: string) => {
+  const res = await fetch('/api/staff', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id }),
@@ -39,7 +38,7 @@ export const deactivateAdmin = async (id: string) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    console.error(`Error deactivating admin [${res.status}]:`, err);
+    console.error(`Error removing staff [${res.status}]:`, err);
     return false;
   }
 

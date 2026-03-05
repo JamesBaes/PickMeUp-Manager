@@ -1,11 +1,13 @@
 import { createAdminClient, createClient } from "@/utils/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const checkSuperAdmin = async () => {
+const ALLOWED_ROLES = ["super_admin", "admin"];
+
+const checkAuthorized = async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Unauthorized", status: 401 };
+  if (!user) return { error: "Unauthorized", status: 401, supabase: null };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -13,16 +15,16 @@ const checkSuperAdmin = async () => {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "super_admin") {
-    return { error: "Forbidden", status: 403 };
+  if (!ALLOWED_ROLES.includes(profile?.role)) {
+    return { error: "Forbidden", status: 403, supabase: null };
   }
 
-  return { error: null, status: 200 };
+  return { error: null, status: 200, supabase };
 };
 
-// API route for adding an admin
+// API route for adding a staff member
 export async function POST(req: NextRequest) {
-  const { error, status } = await checkSuperAdmin();
+  const { error, status } = await checkAuthorized();
   if (error) return NextResponse.json({ error }, { status });
 
   const supabaseAdmin = await createAdminClient();
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error: insertError } = await supabaseAdmin
     .from("profiles")
-    .insert([{ id: authData.user.id, name, email, role: "admin" }])
+    .insert([{ id: authData.user.id, name, email, role: "staff" }])
     .select()
     .single();
 
@@ -49,9 +51,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// API route for deleting an admin
+// API route for deleting a staff member
 export async function DELETE(req: NextRequest) {
-  const { error, status } = await checkSuperAdmin();
+  const { error, status } = await checkAuthorized();
   if (error) return NextResponse.json({ error }, { status });
 
   const supabaseAdmin = await createAdminClient();

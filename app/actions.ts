@@ -37,7 +37,7 @@ export async function login(email: string, password: string) {
   
   const role = profile?.role;
 
-  if (role === "super") {
+  if (role === "staff") {
     return { success: true, redirectTo: "/staff" };
   }
 

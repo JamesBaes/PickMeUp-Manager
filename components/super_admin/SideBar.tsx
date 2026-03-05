@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import LogoutButton from '../LogoutButton'
 
 const superAdminLinks = [
   { page: "Dashboard", route: "/super_admin" },
@@ -10,16 +11,25 @@ const superAdminLinks = [
 ]
 
 const SideBar = () => (
-  <nav className='flex flex-col w-full pt-20 h-screen bg-white'>
-    {superAdminLinks.map((page, index) => (
-      <Link
-        key={index}
-        className='text-center text-xl text-black font-body font-normal py-4 hover:bg-accent-dark transition'
-        href={page.route}
-      >
-        {page.page}
-      </Link>
-    ))}
+  <nav className='flex flex-col w-64 h-screen bg-white border-r border-gray-100 shadow-sm'>
+
+    {/* Links */}
+    <div className="flex-1 flex flex-col py-6 gap-1 px-3">
+      {superAdminLinks.map((page, index) => (
+        <Link
+          key={index}
+          className='flex items-center  text-gray-700 font-body font-normal px-4 py-3 rounded-lg hover:bg-red-50 hover:text-accent transition'
+          href={page.route}
+        >
+          {page.page}
+        </Link>
+      ))}
+    </div>
+
+    {/* Logout */}
+    <div className="px-3 py-6 border-t border-gray-100">
+      <LogoutButton />
+    </div>
   </nav>
 )
 
