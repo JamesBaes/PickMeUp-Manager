@@ -33,7 +33,7 @@ export default function StaffShell({ children }: StaffShellProps) {
 
   return (
     <div className="min-h-screen bg-dashboard-page flex">
-      <aside className="w-20 bg-white border-r border-dashboard-border flex flex-col items-center py-8">
+      <aside className="w-14 sm:w-20 bg-white border-r border-dashboard-border flex flex-col items-center py-4 sm:py-8">
         <div className="mb-10 h-10 w-10 rounded-full bg-accent flex items-center justify-center text-white font-heading font-semibold">
           P
         </div>
@@ -66,9 +66,9 @@ export default function StaffShell({ children }: StaffShellProps) {
         </Link>
       </aside>
 
-      <main className="flex-1 p-5">
-        <div className="rounded-xl border border-dashboard-border bg-dashboard-panel p-4">
-          <div className="mb-4 flex gap-4">
+      <main className="flex-1 min-w-0 p-2 sm:p-5">
+        <div className="rounded-xl border border-dashboard-border bg-dashboard-panel p-2 sm:p-4 overflow-hidden">
+          <div className="mb-4 flex gap-2 sm:gap-4 overflow-x-auto pb-1">
             {topNavItems.map((item) => {
               const isActive = isTopNavActive(item.href);
 
@@ -76,7 +76,7 @@ export default function StaffShell({ children }: StaffShellProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`h-14 min-w-44 rounded-xl border px-6 flex items-center gap-3 font-body text-lg ${
+                  className={`h-11 sm:h-14 min-w-32 sm:min-w-44 rounded-xl border px-4 sm:px-6 flex items-center gap-2 sm:gap-3 font-body text-base sm:text-lg whitespace-nowrap ${
                     isActive
                       ? "bg-dashboard-success-soft border-dashboard-success-soft text-slate-700"
                       : "bg-dashboard-card border-dashboard-border text-slate-600"

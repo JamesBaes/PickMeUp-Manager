@@ -87,12 +87,12 @@ export default function StaffLiveOrdersPage() {
   };
 
   return (
-    <section className="rounded-xl border border-dashboard-border bg-dashboard-card p-4">
-      <h1 className="font-heading text-5xl text-slate-700 mb-3">Live Orders</h1>
+    <section className="rounded-xl border border-dashboard-border bg-dashboard-card p-3 sm:p-4">
+      <h1 className="font-heading text-3xl sm:text-5xl text-slate-700 mb-3 leading-tight">Live Orders</h1>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="rounded-xl border border-dashboard-border p-3">
-          <h2 className="font-body text-4xl text-slate-700 mb-2">Incoming</h2>
+          <h2 className="font-body text-3xl sm:text-4xl text-slate-700 mb-2">Incoming</h2>
           <div className="space-y-3">
             {incomingOrders.length === 0 ? (
               <EmptyState label="No incoming orders" />
@@ -102,13 +102,13 @@ export default function StaffLiveOrdersPage() {
                   key={order.id}
                   order={order}
                   actionArea={
-                    <div className="flex items-end justify-between gap-3 mt-4">
+                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-4">
                       <OrderTypeBadge label={order.orderType} />
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm font-body text-accent">Auto-Reject in {order.autoRejectAt}</span>
+                      <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 w-full sm:w-auto">
+                        <span className="text-xs sm:text-sm font-body text-accent whitespace-nowrap">Auto-Reject in {order.autoRejectAt}</span>
                         <button
                           onClick={() => handleAccept(order.id)}
-                          className="h-10 min-w-28 px-5 rounded-xl bg-dashboard-ring text-white font-body"
+                          className="h-10 min-w-24 sm:min-w-28 px-4 sm:px-5 rounded-xl bg-dashboard-ring text-white font-body"
                         >
                           Accept
                         </button>
@@ -122,7 +122,7 @@ export default function StaffLiveOrdersPage() {
         </div>
 
         <div className="rounded-xl border border-dashboard-border p-3">
-          <h2 className="font-body text-4xl text-slate-700 mb-2">Accepted</h2>
+          <h2 className="font-body text-3xl sm:text-4xl text-slate-700 mb-2">Accepted</h2>
           <div className="space-y-3">
             {acceptedOrders.length === 0 ? (
               <EmptyState label="No accepted orders" />
@@ -135,13 +135,13 @@ export default function StaffLiveOrdersPage() {
                     key={order.id}
                     order={order}
                     actionArea={
-                      <div className="flex items-end justify-between gap-3 mt-4">
+                      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-4">
                         <OrderTypeBadge label={order.orderType} />
 
-                        <div className="flex items-center gap-3 flex-wrap justify-end">
+                        <div className="grid grid-cols-1 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto sm:flex-wrap sm:justify-end">
                           <button
                             onClick={() => handleActionSelect(order.id, "complete-order")}
-                            className={`h-10 min-w-32 px-4 rounded-xl font-body text-white ${
+                            className={`h-10 min-w-0 sm:min-w-32 px-4 rounded-xl font-body text-white ${
                               order.action === "complete-order" ? "bg-dashboard-ring" : "bg-slate-400"
                             }`}
                           >
@@ -150,7 +150,7 @@ export default function StaffLiveOrdersPage() {
 
                           <button
                             onClick={() => handleActionSelect(order.id, "in-progress")}
-                            className={`h-10 min-w-28 px-4 rounded-xl font-body text-white ${
+                            className={`h-10 min-w-0 sm:min-w-28 px-4 rounded-xl font-body text-white ${
                               order.action === "in-progress" ? "bg-accent" : "bg-slate-400"
                             }`}
                           >
@@ -160,7 +160,7 @@ export default function StaffLiveOrdersPage() {
                           {canMarkReady && (
                             <button
                               onClick={() => handleReady(order.id)}
-                              className="h-10 min-w-24 px-4 rounded-xl font-body text-white bg-dashboard-success"
+                              className="h-10 min-w-0 sm:min-w-24 px-4 rounded-xl font-body text-white bg-dashboard-success"
                             >
                               Ready
                             </button>
@@ -190,12 +190,12 @@ function OrderCard({
     <article className="rounded-xl border border-dashboard-border bg-dashboard-card p-4">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
         <div>
-          <p className="text-5xl font-heading text-slate-700 leading-none">{order.orderNumber}</p>
-          <p className="text-4xl font-body text-slate-700 mt-1">{order.customer}</p>
+          <p className="text-3xl sm:text-5xl font-heading text-slate-700 leading-none">{order.orderNumber}</p>
+          <p className="text-2xl sm:text-4xl font-body text-slate-700 mt-1">{order.customer}</p>
           <p className="text-sm font-body text-slate-600 mt-3">{order.note}</p>
         </div>
 
-        <ul className="text-slate-600 font-body min-w-40">
+        <ul className="text-slate-600 font-body min-w-0 sm:min-w-40">
           {order.items.map((item, index) => (
             <li key={`${order.id}-item-${index}`} className="leading-8">
               {item}
@@ -211,7 +211,7 @@ function OrderCard({
 
 function OrderTypeBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center h-10 px-4 rounded-xl bg-dashboard-panel text-amber-700 font-body">
+    <span className="inline-flex items-center h-9 sm:h-10 px-4 rounded-xl bg-dashboard-panel text-amber-700 font-body w-fit">
       {label}
     </span>
   );

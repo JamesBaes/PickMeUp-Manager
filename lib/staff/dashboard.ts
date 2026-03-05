@@ -25,7 +25,11 @@ export interface StaffDashboardData {
 
 // MOCK DATA: Used for UI development until real tables are connected.
 const mockStaffDashboardData: StaffDashboardData = {
-  dateLabel: "Date: Today",
+  dateLabel: `Date: ${new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date())}`,
   statusLabel: "Status: Active",
   searchPlaceholder: "Search",
   incomingOrders: [
