@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { login } from "@/app/actions";
+import Link from "next/link";
+import { convertServerPatchToFullTree } from "next/dist/client/components/segment-cache/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -18,14 +20,20 @@ export default function LoginForm() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const result = await login(email, password);
+    try {
+      const result = await login(email, password);
 
-    if (result?.error) {
-      setError(result.error);
-    } else if (result?.redirectTo) {
-      router.push(result.redirectTo);
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.redirectTo) {
+        router.push(result.redirectTo);
+      }
+    } catch (err) {
+      console.log("Unexpected error during login:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -81,9 +89,9 @@ export default function LoginForm() {
 
         {/* Forgot Password */}
         <div className="text-right font-body">
-          <a href="#" className="text-sm text-accent hover:text-[#850911]">
+          <Link href="../forgot-password" className="text-sm text-accent hover:text-[#850911]">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         {/* Login Button */}

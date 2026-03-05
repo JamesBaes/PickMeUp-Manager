@@ -37,7 +37,7 @@ export async function login(email: string, password: string) {
   
   const role = profile?.role;
 
-  if (role === "staff") {
+  if (role === "super") {
     return { success: true, redirectTo: "/staff" };
   }
 
@@ -45,5 +45,9 @@ export async function login(email: string, password: string) {
     return { success: true, redirectTo: "/admin" };
   }
 
-  return { error: "Invalid user role" };
+  if (role === "super_admin") {
+    return { success: true, redirectTo: "/super_admin" };
+  }
+
+  return { error: "An error occurred. Please try again." };
 }

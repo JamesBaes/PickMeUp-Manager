@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user }} = await supabase.auth.getUser();
+   
+  const { data: { user } } = await supabase.auth.getUser();
 
 
   const { data: profile } = await supabase
@@ -65,6 +66,27 @@ export async function proxy(request: NextRequest) {
   if (user && path.startsWith('/staff') && role ==='admin') {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
+
+  // super_admin accessing staff routes redirect to super_admin
+  if (user && path.startsWith('/staff') && role ==='super_admin') {
+    return NextResponse.redirect(new URL('/super_admin', request.url))
+  }
+
+  // super_admin accessing admin routes redirect to super_admin
+  if (user && path.startsWith('/admin') && role ==='super_admin') {
+    return NextResponse.redirect(new URL('/super_admin', request.url))
+  }
+
+  // admin accessing super_admin routes redirect to admin
+  if (user && path.startsWith('/super_admin') && role ==='admin') {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  // staff accessing super_admin routes redirect to staff
+  if (user && path.startsWith('/super_admin') && role ==='staff') {
+    return NextResponse.redirect(new URL('/staff', request.url))
+  }
+
 
   return response
 }
