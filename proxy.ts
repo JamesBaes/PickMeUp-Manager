@@ -45,14 +45,16 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
     
-  const protectedRoutes = ["/admin", "/staff"]
-  const isProtectedRoute = protectedRoutes.some((route) => route.startsWith(route))
-  
-  if (!user && path === '/') {
+  const protectedRoutes = ["/admin", "/staff", "/super_admin"]
+  const publicRoutes = ['/', '/forgot-password', '/reset-password']
+  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
+  const isPublicRoute = publicRoutes.includes(path)
+
+  if (isPublicRoute) {
     return response
   }
 
-  // unauthenticed users get redirected back to login
+  // unauthenticated users get redirected back to login
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL('/', request.url))
   }

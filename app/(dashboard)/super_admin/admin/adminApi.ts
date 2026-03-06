@@ -1,6 +1,10 @@
-import supabase from "@/utils/client";
+'use server'
+import { createClient } from "@/utils/server";
 
 export const fetchAdmins = async () => {
+
+  const supabase = await createClient();
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role')

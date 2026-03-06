@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import logout from "@/app/(dashboard)/actions/logout";
+import logout from "@/app/actions/logout";
 
 export default function LogoutButton() {
 

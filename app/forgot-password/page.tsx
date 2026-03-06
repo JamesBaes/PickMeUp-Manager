@@ -2,79 +2,105 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import supabase from '@/utils/client' 
+import Link from 'next/link'
+import supabase from '@/utils/client'
 
 const ForgotPassword = () => {
-
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?=/reset-password`, 
+      redirectTo: `${window.location.origin}/auth/callback?=/reset-password`,
     })
 
     if (error) {
       console.log('An error occurred sending reset email.', error)
+      setError('Failed to send reset email. Please try again.')
     } else {
-      setSent(true) 
+      setSent(true)
     }
+
+    setLoading(false)
   }
 
   return (
-   <div className="pt-20 flex flex-col items-center gap-8 bg-accent flex-1 px-4">
-      <Image
-        src="/gladiator-logo-circle.png"
-        alt="Gladiator Logo"
-        priority
-        quality={100}
-        width="96"
-        height="96"
-      />
-      <h1 className="font-heading text-4xl font-semibold text-white">Forgot Password</h1>
-      
-      {sent ? (
-        <p className="font-heading text-background font-medium text-2xl">Check your email for reset link!</p>
-      ) : (
-        <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
-          <p className="font-heading text-background font-medium text-2xl">
-            Email
-          </p>
-          <label className="input validator flex items-center gap-2 bg-background w-md p-3 border-2 border-gray-50 shadow-xs rounded-lg focus-within:border-gray-50">
-            <svg
-              className="h-[1em] opacity-50"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <g
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                fill="none"
-                stroke="currentColor"
-              >
-                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-              </g>
-            </svg>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="font-heading py-4 focus:outline-none focus:ring-0 placeholder:text-gray-400 focus:placeholder:opacity-0 flex-1"
+    <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-gray-100">
+      <div className="w-2/7 min-w-100 p-12 bg-white rounded-xl shadow-lg flex items-center justify-center">
+        <div className="w-full">
+          {/* Logo */}
+          <div className="flex justify-center mb-8 flex-col items-center gap-4">
+            <Image
+              src="/circle-logo.png"
+              alt="Circle Logo"
+              width={108}
+              height={108}
             />
-          </label>
-          
-          <button type="submit" className=" font-heading text-background font-medium w-md bg-foreground rounded-lg p-3 hover:shadow-xl hover:cursor-pointer">
-            Send Password Reset Link
-          </button>
-        </form>
-      )}
+            <h1 className="font-body text-gray-700 font-semibold text-3xl">
+              Forgot Password
+            </h1>
+          </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-4 mb-4 rounded font-body text-center">
+              {error}
+            </div>
+          )}
+
+          {sent ? (
+            <div className="text-center space-y-4">
+              <p className="font-body text-gray-600 text-lg">
+                Check your email for a reset link!
+              </p>
+              <Link
+                href="/"
+                className="block text-sm underline text-[#0074BF] hover:text-[#026cb3] font-body"
+              >
+                Back to Login
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6 w-full">
+              <div>
+                <label htmlFor="email" className="block font-heading font-medium text-xl text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="GladiatorStaff@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="bg-white w-full p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body transition-colors"
+                />
+              </div>
+
+              <div className="text-right font-body">
+                <Link href="/" className="text-sm underline text-[#0074BF] hover:text-[#026cb3]">
+                  Back to Login
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
+              >
+                {loading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

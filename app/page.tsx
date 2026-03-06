@@ -1,18 +1,10 @@
-import Image from "next/image";
 import LoginForm from "@/components/LoginForm";
-
 
 export default function Page() {
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <div className="relative w-3/5">
-        <Image src="/burger-login.png" alt="Burger" fill className="object-cover" priority />
-      </div>
-      
-      <div className="w-2/5 bg-lightbg flex items-center justify-center">
-        <div className="w-full px-12">
-          <LoginForm />
-        </div>
+    <div className="flex h-screen w-screen items-center justify-center bg-gray-100 overflow-hidden">
+      <div className="w-2/7 min-w-100 p-12 rounded-xl bg-white shadow-lg flex items-center justify-center">
+        <LoginForm forgotPasswordLink="/forgot-password" />
       </div>
     </div>
   );

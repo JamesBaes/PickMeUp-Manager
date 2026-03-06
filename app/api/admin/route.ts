@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const { error, status } = await checkSuperAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
-  const supabaseAdmin = await createAdminClient();
+  const supabaseAdmin = await createClient();
   const { name, email } = await req.json();
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
