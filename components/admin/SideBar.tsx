@@ -20,7 +20,7 @@ const SideBar = () => {
   const pathname = usePathname()
 
   return (
-    <nav className='flex flex-col w-16 h-screen bg-white border-r border-gray-100 shadow-sm items-center py-4 gap-2'>
+    <nav className='flex flex-col w-full h-screen bg-white border-r border-gray-100 shadow-sm items-center py-4 gap-2'>
       {/* Logo */}
       <div className="relative group flex items-center justify-center mb-4">
         <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
