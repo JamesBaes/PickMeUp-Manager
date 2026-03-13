@@ -1,4 +1,5 @@
 import { createAdminClient, createClient } from "@/utils/server";
+import { getCurrentAppRole } from "@/utils/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_ROLES = ["super_admin", "admin"];
@@ -9,13 +10,9 @@ const checkAuthorized = async () => {
 
   if (!user) return { error: "Unauthorized", status: 401, supabase: null };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const role = await getCurrentAppRole(supabase, user);
 
-  if (!ALLOWED_ROLES.includes(profile?.role)) {
+  if (!role || !ALLOWED_ROLES.includes(role)) {
     return { error: "Forbidden", status: 403, supabase: null };
   }
 

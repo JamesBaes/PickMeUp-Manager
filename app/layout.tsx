@@ -26,13 +26,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <AuthProvider>
-        <body
-          className={`${headingText.variable} ${bodyText.variable} antialiased`}
-        >
+      <body
+        className={`${headingText.variable} ${bodyText.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>
           {children}
-        </body>
-      </AuthProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

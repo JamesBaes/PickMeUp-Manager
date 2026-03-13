@@ -1,5 +1,6 @@
 'use server'
 
+import { getCurrentAppRole, getDefaultRouteForRole } from "@/utils/auth";
 import { createClient } from "@/utils/server";
 
 export async function login(email: string, password: string) {
@@ -29,25 +30,11 @@ export async function login(email: string, password: string) {
     return { error: "Unable to retrieve user information" };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  
-  const role = profile?.role;
+  const role = await getCurrentAppRole(supabase, user);
 
-  if (role === "staff") {
-    return { success: true, redirectTo: "/staff" };
+  if (role) {
+    return { success: true, redirectTo: getDefaultRouteForRole(role) };
   }
 
-  if (role === "admin") {
-    return { success: true, redirectTo: "/admin" };
-  }
-
-  if (role === "super_admin") {
-    return { success: true, redirectTo: "/super_admin" };
-  }
-
-  return { error: "An error occurred. Please try again." };
+  return { error: "No valid app_role claim was found for this account." };
 }
