@@ -1,6 +1,6 @@
 import React from 'react'
 import SalesChart from '@/components/charts/SalesChart'
-import { getAnalytics, getTodaysOrders, getAllOrders, getWeeklySales } from '../analyticsApi';
+import { getAnalytics, getTodaysOrders, getWeeklySales } from '../analyticsApi';
 import OrdersTable from '@/components/admin/OrdersTable';
 import PageTabs from '@/components/admin/PageTabs';
 import TopItemsChart from '@/components/charts/TopItemsChart';
@@ -8,7 +8,7 @@ import VisitorsDonutChart from '@/components/charts/VisitorsDonutChart';
 
 const HomePage = async () => {
 
-  const [analytics, orders, sales] = await Promise.all([getAnalytics(), getAllOrders(), getWeeklySales()]);
+  const [analytics, orders, sales] = await Promise.all([getAnalytics(), getTodaysOrders(), getWeeklySales()]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
