@@ -145,7 +145,7 @@ const ResetPassword = () => {
         </div>
       )}
       <Image
-        src="/gladiator-logo-circle.png"
+        src="/circle-logo.png"
         alt="Gladiator Logo"
         priority
         quality={100}

@@ -41,35 +41,35 @@ export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: s
   return (
     <div className="w-full">
       {/* Logo */}
-      <div className="flex justify-center mb-8 flex-col items-center gap-4">
+      <div className="flex justify-center mb-8 flex-col items-center gap-3">
         <Image
           src="/circle-logo.png"
           alt="Circle Logo"
           width={108}
           height={108}
+          className="w-20 h-20 sm:w-27 sm:h-27"
         />
-        <h1 className="font-body text-gray-700 font-semibold text-3xl">
+        <h1 className="font-body text-gray-700 font-semibold text-2xl sm:text-3xl text-center">
           Restaurant Manager
         </h1>
       </div>
 
-
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-4 mb-4 rounded font-body text-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-4 rounded font-body text-center text-sm">
           {error}
         </div>
       )}
 
-      <form action={handleLogin} className="space-y-6 w-full">
+      <form action={handleLogin} className="space-y-5 w-full">
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block font-heading font-medium text-xl text-gray-700 mb-2">
+          <label htmlFor="email" className="block font-heading font-medium text-base sm:text-xl text-gray-700 mb-2">
             Email
           </label>
           <input
             id="email"
             name="email"
-            className="bg-white w-full p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body transition-colors"
+            className="bg-white w-full p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body transition-colors"
             type="email"
             placeholder="GladiatorStaff@example.com"
             disabled={loading}
@@ -79,14 +79,14 @@ export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: s
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block font-heading font-medium text-gray-700 text-xl mb-2">
+          <label htmlFor="password" className="block font-heading font-medium text-gray-700 text-base sm:text-xl mb-2">
             Password
           </label>
           <div className="relative">
             <input
               id="password"
               name="password"
-              className="bg-white w-full p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body pr-12 transition-colors"
+              className="bg-white w-full p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body pr-12 transition-colors"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••••••"
               disabled={loading}
