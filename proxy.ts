@@ -1,5 +1,3 @@
-// Proxy.ts file grabbed from https://supabase.com/docs/guides/getting-started/tutorials/with-nextjs?queryGroups=database-method&database-method=dashboard
-
 // This proxy.ts file is in the upper level directory so that it handles every request before routing the user a page. 
 
 import { type NextRequest, NextResponse } from 'next/server'
@@ -16,7 +14,7 @@ export async function proxy(request: NextRequest) {
   // check if user is authenticated
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
