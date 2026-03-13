@@ -21,13 +21,13 @@ const HomePage = async () => {
 
       <div className="flex w-full gap-4">
         <div className="flex flex-col flex-1 gap-4 justify-center min-w-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-3 flex flex-col">
+          <div className="bg-white h-full rounded-2xl border border-gray-100 shadow-sm px-6 py-3 flex flex-col">
             <h3 className="font-semibold font-heading mb-2 text-left text-gray-800 text-md">Visitors (Today vs Returning)</h3>
             <div className="flex justify-center w-full">
               <VisitorsDonutChart daily={analytics.daily_visitors} weekly={analytics.weekly_visitors} />
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
+          <div className="bg-white rounded-2xl border h-full border-gray-100 shadow-sm px-6 py-5">
             <TopItemsChart items={analytics.top_items} />
           </div>
         </div>

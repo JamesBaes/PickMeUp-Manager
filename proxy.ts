@@ -54,7 +54,7 @@ export async function proxy(request: NextRequest) {
 
   // unauthenticated users get redirected back to login
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL('', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   // staff accessing admin routes redirect to staff

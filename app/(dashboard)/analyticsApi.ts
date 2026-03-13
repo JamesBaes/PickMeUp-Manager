@@ -43,8 +43,8 @@ export async function getWeeklySales() {
     .from("orders")
     .select("created_at, total_cents")
     .in("status", ["paid", "picked_up"])
-    // .gte("created_at", sevenDaysAgo.toISOString()); temp comment out, once more updated orders within seven days ago we can test it.
-
+    .gte("created_at", sevenDaysAgo.toISOString()); 
+    
   // Group by day
   const dayMap: Record<string, number> = {};
   for (let i = 6; i >= 0; i--) {
