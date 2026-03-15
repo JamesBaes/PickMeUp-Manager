@@ -3,7 +3,8 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import supabase from '@/utils/client'
+import { handleSubmit } from './action'
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
@@ -11,28 +12,35 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  const onSubmit = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?=/reset-password`,
-    })
-
+    const { error } = await handleSubmit(email);
     if (error) {
-      console.log('An error occurred sending reset email.', error)
-      setError('Failed to send reset email. Please try again.')
+      
+      // Check for Supabase's "email does not exist" error message
+      if (
+        error.message &&
+        error.message.toLowerCase().includes("does not exist")
+      ) {
+        setError("This email is not registered. Please contact your administrator to create an account.");
+        setLoading(false);
+        return;
+      }
+      setError("Failed to send reset email. Please try again.");
+      setLoading(false);
+      return;
     } else {
-      setSent(true)
+      setSent(true);
     }
-
-    setLoading(false)
+    setLoading(false);
   }
 
   return (
     <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-gray-100">
-      <div className="w-2/7 min-w-100 p-12 bg-white rounded-xl shadow-lg flex items-center justify-center">
+      <div className="w-full max-w-lg p-12 rounded-2xl bg-white shadow-lg">
         <div className="w-full">
           {/* Logo */}
           <div className="flex justify-center mb-8 flex-col items-center gap-4">
@@ -66,7 +74,7 @@ const ForgotPassword = () => {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 w-full">
+            <form onSubmit={onSubmit} className="space-y-6 w-full">
               <div>
                 <label htmlFor="email" className="block font-heading font-medium text-xl text-gray-700 mb-2">
                   Email
@@ -77,7 +85,10 @@ const ForgotPassword = () => {
                   name="email"
                   placeholder="GladiatorStaff@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError(null);
+                  }}
                   required
                   disabled={loading}
                   className="bg-white w-full p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body transition-colors"
@@ -92,7 +103,7 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !!(error && error.includes("not registered"))}
                 className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}

@@ -2,7 +2,7 @@
 
 import React, { useContext, useState, createContext, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
-import supabase, { hasSupabaseClientConfig } from "@/utils/client";
+import supabase from "@/utils/client";
 
 
 interface AuthContextType {
@@ -20,7 +20,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode}) => {
 
   {/* Fetches current user on first render, listens for any changes in auth state  */}
   useEffect(() => {
-    if (!hasSupabaseClientConfig || !supabase) {
+    if (!supabase) {
       return;
     }
 
