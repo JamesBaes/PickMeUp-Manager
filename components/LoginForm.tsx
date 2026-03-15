@@ -3,13 +3,17 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { login } from "@/app/actions";
+import { login } from "@/app/actions/login";
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
-export default function LoginForm() {
+
+export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: string}) {
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (formData: FormData) => {
     setError(null);
@@ -18,44 +22,54 @@ export default function LoginForm() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const result = await login(email, password);
+    try {
+      const result = await login(email, password);
 
-    if (result?.error) {
-      setError(result.error);
-    } else if (result?.redirectTo) {
-      router.push(result.redirectTo);
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.redirectTo) {
+        router.replace(result.redirectTo);
+      }
+    } catch (err) {
+      console.log("Unexpected error during login:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="w-full">
       {/* Logo */}
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-8 flex-col items-center gap-3">
         <Image
           src="/circle-logo.png"
           alt="Circle Logo"
           width={108}
           height={108}
+          className="w-20 h-20 sm:w-27 sm:h-27"
         />
+        <h1 className="font-body text-gray-700 font-semibold text-2xl sm:text-3xl text-center">
+          Restaurant Manager
+        </h1>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-4 mb-4 rounded font-body text-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-4 rounded font-body text-center text-sm">
           {error}
         </div>
       )}
 
-      <form action={handleLogin} className="space-y-6 w-full">
+      <form action={handleLogin} className="space-y-5 w-full">
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block font-heading font-medium text-xl mb-2">
+          <label htmlFor="email" className="block font-heading font-medium text-base sm:text-xl text-gray-700 mb-2">
             Email
           </label>
           <input
             id="email"
             name="email"
-            className="bg-white w-full p-4 rounded-xl border-gray-100 border text-gray font-body"
+            className="bg-white w-full p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body transition-colors"
             type="email"
             placeholder="GladiatorStaff@example.com"
             disabled={loading}
@@ -65,32 +79,42 @@ export default function LoginForm() {
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block font-heading font-medium text-xl mb-2">
+          <label htmlFor="password" className="block font-heading font-medium text-gray-700 text-base sm:text-xl mb-2">
             Password
           </label>
-          <input
-            id="password"
-            name="password"
-            className="bg-white w-full p-4 rounded-xl border-gray-100 border text-gray font-body"
-            type="password"
-            placeholder="Password123"
-            disabled={loading}
-            required
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              className="bg-white w-full p-3 sm:p-4 rounded-xl border border-gray-200 hover:border-gray-300 focus:border-blue-300 focus:outline-none text-gray font-body pr-12 transition-colors"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••••••"
+              disabled={loading}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Forgot Password */}
         <div className="text-right font-body">
-          <a href="#" className="text-sm text-accent hover:text-[#850911]">
+          <Link href={forgotPasswordLink} className="text-sm underline text-[#0074BF] hover:text-[#026cb3]">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         {/* Login Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-accent hover:bg-[#850911] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
+          className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
         >
           {loading ? "Logging in..." : "Log In"}
         </button>
