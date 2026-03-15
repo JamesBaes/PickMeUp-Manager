@@ -2,7 +2,7 @@
 
 import React, { useContext, useState, createContext, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
-import supabase from "@/utils/client";
+import supabase, { hasSupabaseClientConfig } from "@/utils/client";
 
 
 interface AuthContextType {
@@ -16,20 +16,24 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({children}: { children: React.ReactNode}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
 
   {/* Fetches current user on first render, listens for any changes in auth state  */}
   useEffect(() => {
+    if (!hasSupabaseClientConfig || !supabase) {
+      return;
+    }
+
+    const supabaseClient = supabase;
+
     const fetchUser = async() => {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await supabaseClient.auth.getUser();
       setUser(data.user);
-      setLoading(false);
     }
 
     fetchUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 

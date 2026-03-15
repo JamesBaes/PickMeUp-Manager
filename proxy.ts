@@ -7,14 +7,21 @@ import { createServerClient } from '@supabase/ssr'
 
 
 export async function proxy(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // When env vars are missing, keep routing available for local UI work.
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request });
+  }
 
   // update user's auth session
   const response = await updateSession(request)
 
   // check if user is authenticated
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {

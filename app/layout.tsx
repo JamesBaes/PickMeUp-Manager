@@ -25,14 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <AuthProvider>
-        <body
-          className={`${headingText.variable} ${bodyText.variable} antialiased`}
-        >
-          {children}
-        </body>
-      </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${headingText.variable} ${bodyText.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

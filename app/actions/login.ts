@@ -1,8 +1,13 @@
 'use server'
 
-import { createClient } from "@/utils/server";
+import { createClient, hasSupabaseServerConfig } from "@/utils/server";
 
 export async function login(email: string, password: string) {
+
+  if (!hasSupabaseServerConfig) {
+    // MOCK MODE: Allow dashboard access during local UI development without Supabase.
+    return { success: true, redirectTo: "/staff" };
+  }
 
   if (!email || !email.includes("@")) {
     return { error: "Please enter a valid email" };
