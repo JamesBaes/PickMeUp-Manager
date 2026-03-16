@@ -48,48 +48,48 @@ const StaffPage = () => {
   };
 
   return (
-    <div className="relative max-w-4xl mx-auto mt-10 p-8">
+    <div className="relative w-full min-h-[78vh] bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-7 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Staff Management</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-800">Location Management</h1>
         <button
           onClick={() => setShowSidebar(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold px-4 py-2 rounded-lg transition"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          Add Staff
+          Add Location
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto min-h-[58vh]">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b">
-              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Name</th>
-              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Role</th>
-              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Email</th>
+            <tr className="border-b border-gray-200">
+              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Name</th>
+              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Role</th>
+              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Email</th>
             </tr>
           </thead>
           <tbody>
             {staff.map((member) => (
-              <tr key={member.id} className="border-b last:border-b-0 hover:bg-gray-50 transition">
+              <tr key={member.id} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-sm">
                       {member.name[0]}
                     </div>
-                    <span className="text-sm font-medium">{member.name}</span>
+                    <span className="text-base font-medium">{member.name}</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-600">{member.role}</td>
-                <td className="py-3 px-4 text-sm text-gray-600">{member.email}</td>
+                <td className="py-3 px-4 text-base text-gray-600">{member.role}</td>
+                <td className="py-3 px-4 text-base text-gray-600">{member.email}</td>
                 <td className="py-3 px-4 text-right">
                   <button
                     onClick={() => handleRemoveStaff(member.id)}
-                    className="text-xs border border-red-500 text-red-500 px-3 py-1 rounded-md hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="text-sm border border-red-500 text-red-500 px-3 py-1 rounded-md hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Remove
                   </button>
@@ -109,7 +109,7 @@ const StaffPage = () => {
           />
           <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
             <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Add New Staff Member</h2>
+              <h2 className="text-lg font-semibold">Add New Location</h2>
               <button
                 onClick={() => setShowSidebar(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -154,7 +154,7 @@ const StaffPage = () => {
                   type="submit"
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
                 >
-                  Add Staff
+                  Add Location
                 </button>
               </div>
             </form>
