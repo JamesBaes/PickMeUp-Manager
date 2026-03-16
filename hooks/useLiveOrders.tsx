@@ -1,0 +1,121 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import supabase from '@/utils/client'
+import type { Order } from '@/types'
+
+const ACTIVE_STATUSES = ['paid', 'accepted', 'in_progress', 'ready']
+const DONE_STATUSES = ['completed', 'rejected']
+
+interface UseLiveOrdersOptions {
+  restaurantId?: number
+}
+
+export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // initial fetch from orders table
+  useEffect(() => {
+    async function fetchOrders() {
+      let query = supabase
+        .from('orders')
+        .select('*')
+        .in('status', ACTIVE_STATUSES)
+        .order('created_at', { ascending: true })
+
+      if (restaurantId) {
+        query = query.eq('restaurant_id', restaurantId)
+      }
+
+      const { data, error } = await query
+      if (!error && data) setOrders(data)
+      setLoading(false)
+    }
+
+    fetchOrders()
+  }, [restaurantId])
+
+  // Realtime subscription
+  useEffect(() => {
+    const filter = restaurantId
+      ? `restaurant_id=eq.${restaurantId}`
+      : undefined
+
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          ...(filter ? { filter } : {}),
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order
+            if (ACTIVE_STATUSES.includes(newOrder.status)) {
+              setOrders((prev) => [...prev, newOrder])
+            }
+          }
+
+          if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Order
+            if (DONE_STATUSES.includes(updated.status)) {
+              setOrders((prev) => prev.filter((o) => o.id !== updated.id))
+            } else {
+              setOrders((prev) =>
+                prev.map((o) => (o.id === updated.id ? updated : o))
+              )
+            }
+          }
+
+          if (payload.eventType === 'DELETE') {
+            setOrders((prev) => prev.filter((o) => o.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [restaurantId])
+
+  const updateStatus = useCallback(
+    async (id: string, status: string) => {
+      // Optimistic update
+      setOrders((prev) => {
+        if (DONE_STATUSES.includes(status)) {
+          return prev.filter((o) => o.id !== id)
+        }
+        return prev.map((o) => (o.id === id ? { ...o, status } : o))
+      })
+
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', id)
+
+      if (error) {
+        console.error('Failed to update order status:', error)
+        // Revert optimistic update on failure by re-fetching
+        const { data } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (data) {
+          setOrders((prev) => prev.map((o) => (o.id === id ? data : o)))
+        }
+      }
+    },
+    [supabase]
+  )
+
+  const incoming = orders.filter((o) => o.status === 'paid')
+  const accepted = orders.filter((o) => ['accepted', 'in_progress', 'ready'].includes(o.status))
+
+  return { incoming, accepted, loading, updateStatus }
+}

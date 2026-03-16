@@ -1,52 +1,62 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { fetchAdmins, deactivateAdmin, addAdmin } from "./adminApi";
+import { fetchAdmins, fetchRestaurantLocations, deactivateAdmin, addAdmin } from "./adminApi";
 
 type Admin = {
   id: string;
   name: string;
   email: string;
   role: "admin";
+  restaurant_id: number | null;
+};
+
+type RestaurantLocation = {
+  restaurant_id: number;
+  location_name: string;
 };
 
 const AdminPage = () => {
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [locations, setLocations] = useState<RestaurantLocation[]>([]);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "" });
+  const [form, setForm] = useState({ name: "", email: "", restaurant_id: "" });
 
-  // fetch admins list
   useEffect(() => {
-    const loadAdmins = async () => {
-      const data = await fetchAdmins();
-      if (data) {
-        setAdmins(data);
-      }
+    const load = async () => {
+      const [adminData, locationData] = await Promise.all([
+        fetchAdmins(),
+        fetchRestaurantLocations(),
+      ]);
+      if (adminData) setAdmins(adminData);
+      if (locationData) setLocations(locationData);
     };
-    loadAdmins();
+    load();
   }, []);
 
-  // deactivating an admin account
   const handleDeactivateAdmin = async (id: string) => {
     const success = await deactivateAdmin(id);
-
     if (success) {
       setAdmins((prev) => prev.filter((admin) => admin.id !== id));
     }
   };
 
-  // adding an admin account
   const handleAddAdmin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email) return;
+    if (!form.name || !form.email || !form.restaurant_id) return;
 
-    const newAdmin = await addAdmin(form.name, form.email);
+    const newAdmin = await addAdmin(form.name, form.email, Number(form.restaurant_id));
     if (newAdmin) {
       setAdmins((prev) => [...prev, newAdmin]);
     }
 
-    setForm({ name: "", email: "" });
+    setForm({ name: "", email: "", restaurant_id: "" });
     setShowSidebar(false);
   };
+
+  const getLocationName = (id: number | null) => {
+    if (!id) return '—'
+    return locations.find((l) => l.restaurant_id === id)?.location_name ?? '—'
+  }
 
   return (
     <div className="relative w-full min-h-[78vh] bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-7 md:p-8">
@@ -68,10 +78,12 @@ const AdminPage = () => {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto min-h-[58vh]">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Name</th>
-              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Role</th>
-              <th className="py-3 px-4 text-left text-base font-semibold text-gray-500">Email</th>
+            <tr className="border-b">
+              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Name</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Role</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Email</th>
+              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">Location</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -85,12 +97,13 @@ const AdminPage = () => {
                     <span className="text-base font-medium">{admin.name}</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-base text-gray-600">{admin.role}</td>
-                <td className="py-3 px-4 text-base text-gray-600">{admin.email}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{admin.role}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{admin.email}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{getLocationName(admin.restaurant_id)}</td>
                 <td className="py-3 px-4 text-right">
                   <button
                     onClick={() => handleDeactivateAdmin(admin.id)}
-                    className="text-sm border border-red-500 text-red-500 px-3 py-1 rounded-md hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="text-xs border border-red-500 text-red-500 px-3 py-1 rounded-md hover:bg-red-50 transition"
                   >
                     Deactivate
                   </button>
@@ -142,6 +155,22 @@ const AdminPage = () => {
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Restaurant Location</label>
+                <select
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={form.restaurant_id}
+                  onChange={(e) => setForm((f) => ({ ...f, restaurant_id: e.target.value }))}
+                  required
+                >
+                  <option value="">Select a location</option>
+                  {locations.map((loc) => (
+                    <option key={loc.restaurant_id} value={loc.restaurant_id}>
+                      {loc.location_name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="mt-auto flex gap-2">
                 <button

@@ -12,76 +12,87 @@ const requirements = [
   { label: 'Uppercase letter', test: (pw: string) => /[A-Z]/.test(pw) },
   { label: 'Number', test: (pw: string) => /[0-9]/.test(pw) },
   { label: 'Special character', test: (pw: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pw) },
-];
+]
 
-const ResetPassword = () => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isValidSession, setIsValidSession] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+const SetPassword = () => {
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isValidSession, setIsValidSession] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.replace('/forgot-password');
-      } else {
-        setIsValidSession(true);
-      }
-    };
-    checkSession();
-  }, [router]);
+    const params = new URLSearchParams(window.location.search)
+    const token_hash = params.get('token_hash')
+    const type = params.get('type')
 
-  const allValid = requirements.every(r => r.test(newPassword));
-  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
+    if (token_hash && type === 'invite') {
+      supabase.auth.verifyOtp({ token_hash, type: 'invite' }).then(({ error }) => {
+        if (error) {
+          router.replace('/')
+        } else {
+          setIsValidSession(true)
+        }
+      })
+    } else {
+      // fallback: check if already has a session (e.g. re-visiting the page)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setIsValidSession(true)
+        } else {
+          router.replace('/')
+        }
+      })
+    }
+  }, [router])
+
+  const allValid = requirements.every(r => r.test(newPassword))
+  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     if (!allValid) {
-      setError('Password does not meet all requirements.');
-      setIsLoading(false);
-      return;
+      setError('Password does not meet all requirements.')
+      setIsLoading(false)
+      return
     }
     if (!passwordsMatch) {
-      setError('Passwords do not match.');
-      setIsLoading(false);
-      return;
+      setError('Passwords do not match.')
+      setIsLoading(false)
+      return
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword
-    });
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
 
     if (updateError) {
-      setError(updateError.message);
-      setIsLoading(false);
-      return;
+      setError(updateError.message)
+      setIsLoading(false)
+      return
     }
 
-    await supabase.auth.signOut();
-    setShowSuccess(true);
+    await supabase.auth.signOut()
+    setShowSuccess(true)
     setTimeout(() => {
-      router.push("/");
-    }, 2000);
+      router.push('/')
+    }, 2000)
   }
 
   if (!isValidSession) {
     return (
       <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-gray-100">
         <div className="w-full max-w-lg p-12 rounded-2xl bg-white shadow-lg flex flex-col items-center">
-          <p className="font-heading text-gray-700 font-medium text-2xl">Verifying session...</p>
+          <p className="font-heading text-gray-700 font-medium text-2xl">Verifying invite...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -90,7 +101,7 @@ const ResetPassword = () => {
         <div className="w-full">
           <div className="flex justify-center mb-6 flex-col items-center gap-4">
             <Image src="/circle-logo.png" alt="Circle Logo" width={108} height={108} />
-            <h1 className="font-body text-gray-700 font-semibold text-3xl">Reset Password</h1>
+            <h1 className="font-body text-gray-700 font-semibold text-3xl">Set Password</h1>
           </div>
 
           {error && (
@@ -102,7 +113,7 @@ const ResetPassword = () => {
           {showSuccess ? (
             <div className="text-center space-y-4">
               <p className="font-body text-gray-600 text-lg">
-                Password Successfully Updated.<br />
+                Password successfully set.<br />
                 Redirecting to login page...
               </p>
               <Link
@@ -116,14 +127,13 @@ const ResetPassword = () => {
             <form onSubmit={handleSubmit} className="space-y-4 w-full">
               <div>
                 <label htmlFor="newPassword" className="block font-heading font-medium text-xl text-gray-700 mb-2">
-                  New Password
+                  Password
                 </label>
                 <div className="relative">
                   <input
                     id="newPassword"
-                    type={showNewPassword ? "text" : "password"}
-                    name="newPassword"
-                    placeholder="Enter new password"
+                    type={showNewPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     required
@@ -147,9 +157,8 @@ const ResetPassword = () => {
                 <div className="relative">
                   <input
                     id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Confirm new password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     required
@@ -168,9 +177,9 @@ const ResetPassword = () => {
                 {confirmPassword && (
                   <div className="mt-2 text-sm font-body text-right">
                     {passwordsMatch ? (
-                      <span className="text-green-600 flex items-center gap-1"><Check size={16} /> Passwords match</span>
+                      <span className="text-green-600 flex items-center gap-1 justify-end"><Check size={16} /> Passwords match</span>
                     ) : (
-                      <span className="text-red-600 flex items-center gap-1"><X size={16} /> Passwords do not match</span>
+                      <span className="text-red-600 flex items-center gap-1 justify-end"><X size={16} /> Passwords do not match</span>
                     )}
                   </div>
                 )}
@@ -182,7 +191,7 @@ const ResetPassword = () => {
                       {r.test(newPassword)
                         ? <Check size={16} className="text-green-600" />
                         : <X size={16} className="text-red-600" />}
-                      <span className={r.test(newPassword) ? "text-green-700" : "text-gray-700"}>{r.label}</span>
+                      <span className={r.test(newPassword) ? 'text-green-700' : 'text-gray-700'}>{r.label}</span>
                     </li>
                   ))}
                 </ul>
@@ -197,7 +206,7 @@ const ResetPassword = () => {
                 disabled={isLoading || !newPassword || !confirmPassword || !allValid || !passwordsMatch}
                 className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
               >
-                {isLoading ? 'Updating...' : 'Reset Password'}
+                {isLoading ? 'Setting password...' : 'Set Password'}
               </button>
             </form>
           )}
@@ -207,4 +216,4 @@ const ResetPassword = () => {
   )
 }
 
-export default ResetPassword
+export default SetPassword
