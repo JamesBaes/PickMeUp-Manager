@@ -28,6 +28,11 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkSession = async () => {
+      if (!supabase) {
+        setError('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.');
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.replace('/forgot-password');
@@ -53,6 +58,12 @@ const ResetPassword = () => {
     }
     if (!passwordsMatch) {
       setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!supabase) {
+      setError('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.');
       setIsLoading(false);
       return;
     }

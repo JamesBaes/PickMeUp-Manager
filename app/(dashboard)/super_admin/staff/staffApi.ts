@@ -1,6 +1,11 @@
 import supabase from "@/utils/client";
 
 export const fetchStaff = async () => {
+  if (!supabase) {
+    console.error('Supabase client is not configured.');
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role')
