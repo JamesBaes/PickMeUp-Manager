@@ -1,9 +1,20 @@
+import OrderBar from '@/components/staff/OrderBar'
+import OrderCard from '@/components/staff/OrderCard'
 import React from 'react'
 
-const page = () => {
+
+
+const HomePage = () => {
   return (
-    <div>page</div>
+    <main>
+
+      <div className="flex flex-1 gap-4">
+          Staff
+      </div>
+
+
+    </main>
   )
 }
 
-export default page
+export default HomePage

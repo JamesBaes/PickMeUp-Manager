@@ -29,7 +29,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user }} = await supabase.auth.getUser();
+   
+  const { data: { user } } = await supabase.auth.getUser();
 
 
   const { data: profile } = await supabase
@@ -42,16 +43,18 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
     
-  const protectedRoutes = ["/admin", "/staff"]
-  const isProtectedRoute = protectedRoutes.some((route) => route.startsWith(route))
-  
-  if (!user && path === '/') {
+  const protectedRoutes = ["/admin", "/staff", "/super_admin"]
+  const publicRoutes = ['/', '/forgot-password', '/reset-password']
+  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
+  const isPublicRoute = publicRoutes.includes(path)
+
+  if (isPublicRoute) {
     return response
   }
 
-  // unauthenticed users get redirected back to login
+  // unauthenticated users get redirected back to login
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('', request.url))
   }
 
   // staff accessing admin routes redirect to staff
@@ -63,6 +66,27 @@ export async function proxy(request: NextRequest) {
   if (user && path.startsWith('/staff') && role ==='admin') {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
+
+  // super_admin accessing staff routes redirect to super_admin
+  if (user && path.startsWith('/staff') && role ==='super_admin') {
+    return NextResponse.redirect(new URL('/super_admin', request.url))
+  }
+
+  // super_admin accessing admin routes redirect to super_admin
+  if (user && path.startsWith('/admin') && role ==='super_admin') {
+    return NextResponse.redirect(new URL('/super_admin', request.url))
+  }
+
+  // admin accessing super_admin routes redirect to admin
+  if (user && path.startsWith('/super_admin') && role ==='admin') {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  // staff accessing super_admin routes redirect to staff
+  if (user && path.startsWith('/super_admin') && role ==='staff') {
+    return NextResponse.redirect(new URL('/staff', request.url))
+  }
+
 
   return response
 }
