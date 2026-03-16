@@ -20,13 +20,16 @@ const checkSuperAdmin = async () => {
   return { error: null, status: 200 };
 };
 
-// API route for adding an admin
 export async function POST(req: NextRequest) {
   const { error, status } = await checkSuperAdmin();
   if (error) return NextResponse.json({ error }, { status });
 
-  const supabaseAdmin = await createClient();
-  const { name, email } = await req.json();
+  const supabaseAdmin = await createAdminClient();
+  const { name, email, restaurant_id } = await req.json();
+
+  if (!restaurant_id) {
+    return NextResponse.json({ error: "restaurant_id is required" }, { status: 400 });
+  }
 
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error: insertError } = await supabaseAdmin
     .from("profiles")
-    .insert([{ id: authData.user.id, name, email, role: "admin" }])
+    .insert([{ id: authData.user.id, name, email, role: "admin", restaurant_id }])
     .select()
     .single();
 
@@ -49,7 +52,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-// API route for deleting an admin
 export async function DELETE(req: NextRequest) {
   const { error, status } = await checkSuperAdmin();
   if (error) return NextResponse.json({ error }, { status });
