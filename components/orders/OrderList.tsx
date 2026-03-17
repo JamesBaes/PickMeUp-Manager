@@ -1,62 +1,60 @@
 import React from 'react'
 
-type OrderValue =
-  | string
-  | number
-  | boolean
-  | null
-  | Record<string, unknown>
-  | unknown[]
-
 interface OrderItem {
-  [key: string]: OrderValue
+  id: string
+  created_at: string
+  customer_name: string | null
+  customer_phone: string | null
+  items: Record<string, unknown> | unknown[] | null
+  total_cents: number | null
+  customer_email: string | null
+  customer_id: string | null
 }
 
 interface OrderListProps {
   orders: OrderItem[]
 }
 
-const formatValue = (value: OrderValue) => {
-  if (value === null) return '-'
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  if (typeof value === 'string' || typeof value === 'number') return value
-
+const formatItems = (items: OrderItem['items']) => {
+  if (items === null) return '-'
   try {
-    return JSON.stringify(value)
+    return JSON.stringify(items)
   } catch {
-    return String(value)
+    return String(items)
   }
 }
 
-const toColumnLabel = (column: string) =>
-  column
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-
 const OrderList: React.FC<OrderListProps> = ({ orders }) => {
-  const columns = Array.from(new Set(orders.flatMap((order) => Object.keys(order))))
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse border border-gray-300">
         <thead className="bg-gray-200">
           <tr>
-            {columns.map((column) => (
-              <th key={column} className="border border-gray-300 p-2 text-left">
-                {toColumnLabel(column)}
-              </th>
-            ))}
+            <th className="border border-gray-300 p-2 text-left">ID</th>
+            <th className="border border-gray-300 p-2 text-left">Created At</th>
+            <th className="border border-gray-300 p-2 text-left">Customer Name</th>
+            <th className="border border-gray-300 p-2 text-left">Customer Phone</th>
+            <th className="border border-gray-300 p-2 text-left">Items</th>
+            <th className="border border-gray-300 p-2 text-left">Total</th>
+            <th className="border border-gray-300 p-2 text-left">Customer Email</th>
+            <th className="border border-gray-300 p-2 text-left">Customer ID</th>
           </tr>
         </thead>
         <tbody>
-          {orders.map((order, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-gray-100">
-              {columns.map((column) => (
-                <td key={`${rowIndex}-${column}`} className="border border-gray-300 p-2">
-                  {formatValue(order[column] ?? null)}
-                </td>
-              ))}
+          {orders.map((order) => (
+            <tr key={order.id} className="hover:bg-gray-100">
+              <td className="border border-gray-300 p-2">{order.id}</td>
+              <td className="border border-gray-300 p-2">
+                {new Date(order.created_at).toLocaleString()}
+              </td>
+              <td className="border border-gray-300 p-2">{order.customer_name ?? '-'}</td>
+              <td className="border border-gray-300 p-2">{order.customer_phone ?? '-'}</td>
+              <td className="border border-gray-300 p-2">{formatItems(order.items)}</td>
+              <td className="border border-gray-300 p-2">
+                {order.total_cents === null ? '-' : `$${(order.total_cents / 100).toFixed(2)}`}
+              </td>
+              <td className="border border-gray-300 p-2">{order.customer_email ?? '-'}</td>
+              <td className="border border-gray-300 p-2">{order.customer_id ?? '-'}</td>
             </tr>
           ))}
         </tbody>
