@@ -3,13 +3,11 @@ import SideBar from "@/components/super_admin/SideBar";
 
 export default function Layout({ children, }: Readonly<{ children: React.ReactNode; }>) {
   return (
-    <div className="flex min-h-screen bg-lightbg">
-      <aside className="w-36 bg-white shadow-md border-r border-gray-200 shadow-r-lg">
-        <div className="h-full shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)]">
+    <div className="min-h-screen bg-lightbg md:flex">
+      <aside className="w-full md:w-64 md:shrink-0 bg-white border-b md:border-b-0 md:border-r border-gray-200 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)]">
           <SideBar />
-        </div>
       </aside>
-      <main className="flex-1 p-10">
+      <main className="flex-1 p-4 md:p-10">
         {children}
       </main>
     </div>
