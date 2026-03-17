@@ -4,10 +4,20 @@ import { getAnalytics, getTodaysOrders, getWeeklySales } from '../analyticsApi';
 import OrdersTable from '@/components/orders/OrdersTable';
 import TopItemsChart from '@/components/charts/TopItemsChart';
 import VisitorsDonutChart from '@/components/charts/VisitorsDonutChart';
+import { getRestaurantInfo } from '@/utils/getRestaurantInfo';
 
 const HomePage = async () => {
 
-  const [analytics, orders, sales] = await Promise.all([getAnalytics(), getTodaysOrders(), getWeeklySales()]);
+  const { restaurantId, locationName } = await getRestaurantInfo()
+  const [analytics, orders, sales] = await Promise.all([getAnalytics(), getTodaysOrders(restaurantId), getWeeklySales(restaurantId)]);
+
+  const formatLocationName = (text: string): string => {
+    return text
+      .toLowerCase()
+      .split(/[\s_]+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+}
 
   return (
     <div className="w-full space-y-6">
@@ -34,7 +44,7 @@ const HomePage = async () => {
             <SalesChart
               labels={sales.labels}
               data={sales.data}
-              title="Weekly Revenue"
+              title={`Weekly Revenue${locationName ? ` (${formatLocationName(locationName)})` : ''}`}
             />
           </div>
         </div>
