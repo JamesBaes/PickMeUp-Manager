@@ -4,19 +4,16 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import OrderList from '@/components/orders/OrderList'
 
-interface OrderValue {
-	[key: string]: unknown
-}
+type OrderValue =
+	| string
+	| number
+	| boolean
+	| null
+	| Record<string, unknown>
+	| unknown[]
 
 interface OrderItem {
-	id: string
-	created_at: string
-	customer_name: string | null
-	customer_phone: string | null
-	items: OrderValue | unknown[] | null
-	total_cents: number | null
-	customer_email: string | null
-	customer_id: string | null
+	[key: string]: OrderValue
 }
 
 const OrdersPage = () => {
@@ -35,9 +32,7 @@ const OrdersPage = () => {
 				}
 
 				const supabase = createClient(supabaseUrl, supabaseKey)
-				const { data, error } = await supabase
-					.from('orders')
-					.select('id, created_at, customer_name, customer_phone, items, total_cents, customer_email, customer_id')
+				const { data, error } = await supabase.from('orders').select('*')
 
 				if (error) throw error
 				setOrders((data as OrderItem[]) || [])
