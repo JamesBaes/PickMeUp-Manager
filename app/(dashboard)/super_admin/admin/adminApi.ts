@@ -1,6 +1,7 @@
 import supabase from "@/utils/client";
 
 export const fetchAdmins = async () => {
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role, restaurant_id')
@@ -14,6 +15,7 @@ export const fetchAdmins = async () => {
 }
 
 export const fetchRestaurantLocations = async () => {
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from('restaurant_locations')
     .select('restaurant_id, location_name')
