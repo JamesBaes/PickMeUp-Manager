@@ -35,27 +35,56 @@ export default function LiveOrderCard({ order }: { order: Order }) {
         {pickupTime && <span>Pickup at {pickupTime}</span>}
       </div>
 
-      <ActionButton order={order} updateStatus={updateStatus} refundOrder={refundOrder} />
+      <ActionButton order={order} total={total} updateStatus={updateStatus} refundOrder={refundOrder} />
     </div>
   )
 }
 
 function ActionButton({
   order,
+  total,
   updateStatus,
   refundOrder,
 }: {
   order: Order
+  total: string
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
   refundOrder: (id: string) => Promise<void>
 }) {
+  const [confirming, setConfirming] = useState(false)
   const [refunding, setRefunding] = useState(false)
 
-  const handleRefund = async () => {
-    if (refunding) return
+  const handleRefundClick = () => setConfirming(true)
+  const handleCancel = () => setConfirming(false)
+  const handleConfirm = async () => {
+    setConfirming(false)
     setRefunding(true)
     await refundOrder(order.id)
     setRefunding(false)
+  }
+
+  if (confirming) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-xs text-center text-gray-500">
+          Issue full refund of <span className="font-semibold text-gray-700">${total}</span>?
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCancel}
+            className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium active:scale-95 transition-all"
+          >
+            Confirm Refund
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (order.status === 'in_progress') {
@@ -68,7 +97,7 @@ function ActionButton({
           Ready
         </button>
         <button
-          onClick={handleRefund}
+          onClick={handleRefundClick}
           disabled={refunding}
           className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -88,7 +117,7 @@ function ActionButton({
           Complete
         </button>
         <button
-          onClick={handleRefund}
+          onClick={handleRefundClick}
           disabled={refunding}
           className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >

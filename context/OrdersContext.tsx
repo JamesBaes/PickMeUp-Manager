@@ -7,6 +7,11 @@ import type { Order, OrderStatus } from '@/types'
 
 const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
 
+interface ToastMessage {
+  message: string
+  type: 'success' | 'error'
+}
+
 interface OrdersContextValue {
   queue: Order[]
   currentNotification: Order | null
@@ -15,6 +20,8 @@ interface OrdersContextValue {
   rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
   refundOrder: (id: string) => Promise<void>
+  toast: ToastMessage | null
+  clearToast: () => void
 }
 
 const OrdersContext = createContext<OrdersContextValue | null>(null)
@@ -113,21 +120,27 @@ export function OrdersProvider({
     if (error) console.error('Failed to reject order:', error)
   }, [])
 
-  const refundOrder = useCallback(async (id: string) => {
-    setLiveOrders((prev) => prev.filter((o) => o.id !== id))
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+  const clearToast = useCallback(() => setToast(null), [])
 
+  const refundOrder = useCallback(async (id: string) => {
     try {
       const res = await fetch('/api/refund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: id }),
       })
-      if (!res.ok) {
+      if (res.ok) {
+        setLiveOrders((prev) => prev.filter((o) => o.id !== id))
+        setToast({ message: 'Refund issued successfully', type: 'success' })
+      } else {
         const body = await res.json().catch(() => ({}))
         console.error('Refund failed:', body.error ?? res.statusText)
+        setToast({ message: body.error ?? 'Refund failed', type: 'error' })
       }
     } catch (err) {
       console.error('Refund request threw:', err)
+      setToast({ message: 'Refund failed — network error', type: 'error' })
     }
   }, [])
 
@@ -147,7 +160,7 @@ export function OrdersProvider({
   const currentNotification = queue[0] ?? null
 
   return (
-    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus, refundOrder }}>
+    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast }}>
       {children}
     </OrdersContext.Provider>
   )
