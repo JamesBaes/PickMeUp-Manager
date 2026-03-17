@@ -14,6 +14,7 @@ interface OrdersContextValue {
   acceptOrder: (id: string) => Promise<void>
   rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
+  refundOrder: (id: string) => Promise<void>
 }
 
 const OrdersContext = createContext<OrdersContextValue | null>(null)
@@ -80,7 +81,7 @@ export function OrdersProvider({
             return
           }
 
-          if ((['completed', 'rejected'] as OrderStatus[]).includes(order.status as OrderStatus)) {
+          if ((['completed', 'rejected', 'refunded'] as OrderStatus[]).includes(order.status as OrderStatus)) {
             setLiveOrders((prev) => prev.filter((o) => o.id !== order.id))
             setQueue((prev) => prev.filter((o) => o.id !== order.id))
             return
@@ -112,6 +113,24 @@ export function OrdersProvider({
     if (error) console.error('Failed to reject order:', error)
   }, [])
 
+  const refundOrder = useCallback(async (id: string) => {
+    setLiveOrders((prev) => prev.filter((o) => o.id !== id))
+
+    try {
+      const res = await fetch('/api/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('Refund failed:', body.error ?? res.statusText)
+      }
+    } catch (err) {
+      console.error('Refund request threw:', err)
+    }
+  }, [])
+
   const updateStatus = useCallback(async (id: string, status: OrderStatus) => {
     if ((['completed', 'rejected'] as OrderStatus[]).includes(status)) {
       setLiveOrders((prev) => prev.filter((o) => o.id !== id))
@@ -128,8 +147,8 @@ export function OrdersProvider({
   const currentNotification = queue[0] ?? null
 
   return (
-    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus }}>
+    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus, refundOrder }}>
       {children}
     </OrdersContext.Provider>
   )
-} 
+}

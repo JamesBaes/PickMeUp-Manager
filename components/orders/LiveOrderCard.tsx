@@ -1,10 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { useOrders } from '@/context/OrdersContext'
 import type { Order, OrderStatus } from '@/types'
 
 export default function LiveOrderCard({ order }: { order: Order }) {
-  const { updateStatus } = useOrders()
+  const { updateStatus, refundOrder } = useOrders()
   const total = (order.total_cents / 100).toFixed(2)
   const pickupTime = order.pickup_time
     ? new Date(order.pickup_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -34,7 +35,7 @@ export default function LiveOrderCard({ order }: { order: Order }) {
         {pickupTime && <span>Pickup at {pickupTime}</span>}
       </div>
 
-      <ActionButton order={order} updateStatus={updateStatus} />
+      <ActionButton order={order} updateStatus={updateStatus} refundOrder={refundOrder} />
     </div>
   )
 }
@@ -42,29 +43,58 @@ export default function LiveOrderCard({ order }: { order: Order }) {
 function ActionButton({
   order,
   updateStatus,
+  refundOrder,
 }: {
   order: Order
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
+  refundOrder: (id: string) => Promise<void>
 }) {
+  const [refunding, setRefunding] = useState(false)
+
+  const handleRefund = async () => {
+    if (refunding) return
+    setRefunding(true)
+    await refundOrder(order.id)
+    setRefunding(false)
+  }
+
   if (order.status === 'in_progress') {
     return (
-      <button
-        onClick={() => updateStatus(order.id, 'ready')}
-        className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
-      >
-        Ready
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={() => updateStatus(order.id, 'ready')}
+          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
+        >
+          Ready
+        </button>
+        <button
+          onClick={handleRefund}
+          disabled={refunding}
+          className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {refunding ? 'Refunding...' : 'Refund'}
+        </button>
+      </div>
     )
   }
 
   if (order.status === 'ready') {
     return (
-      <button
-        onClick={() => updateStatus(order.id, 'completed')}
-        className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
-      >
-        Complete
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={() => updateStatus(order.id, 'completed')}
+          className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
+        >
+          Complete
+        </button>
+        <button
+          onClick={handleRefund}
+          disabled={refunding}
+          className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {refunding ? 'Refunding...' : 'Refund'}
+        </button>
+      </div>
     )
   }
 
@@ -78,6 +108,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
     ready: 'bg-green-100 text-green-700',
     completed: 'bg-gray-100 text-gray-500',
     rejected: 'bg-red-100 text-red-600',
+    refunded: 'bg-purple-100 text-purple-600',
   }
 
   const labels: Record<OrderStatus, string> = {
@@ -86,6 +117,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
     ready: 'Ready',
     completed: 'Completed',
     rejected: 'Rejected',
+    refunded: 'Refunded',
   }
 
   return (
