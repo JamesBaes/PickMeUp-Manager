@@ -1,4 +1,4 @@
-export type OrderStatus = 'incoming' | 'accepted' | 'in_progress' | 'ready' | 'completed' | 'rejected'
+export type OrderStatus = 'paid' | 'in_progress' | 'ready' | 'completed' | 'rejected'
  
 export interface OrderItem {
   name: string
@@ -16,7 +16,7 @@ export interface Order {
   items: OrderItem[]
   total_cents: number
   square_payment_id: string | null
-  status: string
+  status: OrderStatus
   pickup_time: string | null
   billing_address: string | null
   billing_country: string | null

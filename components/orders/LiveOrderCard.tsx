@@ -1,24 +1,23 @@
 'use client'
 
 import { useOrders } from '@/context/OrdersContext'
-import type { Order } from '@/types'
+import type { Order, OrderStatus } from '@/types'
 
 export default function LiveOrderCard({ order }: { order: Order }) {
   const { updateStatus } = useOrders()
   const total = (order.total_cents / 100).toFixed(2)
   const pickupTime = order.pickup_time
-    ? new Date(order.pickup_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    ? new Date(order.pickup_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     : null
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
-
       <div className="flex justify-between items-start">
         <div>
           <p className="text-base font-semibold text-gray-900">{order.customer_name}</p>
           <p className="text-sm text-gray-400">{order.customer_phone}</p>
         </div>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={order.status as OrderStatus} />
       </div>
 
       <div className="flex flex-col gap-1">
@@ -45,19 +44,8 @@ function ActionButton({
   updateStatus,
 }: {
   order: Order
-  updateStatus: (id: string, status: string) => Promise<void>
+  updateStatus: (id: string, status: OrderStatus) => Promise<void>
 }) {
-  if (order.status === 'accepted') {
-    return (
-      <button
-        onClick={() => updateStatus(order.id, 'in_progress')}
-        className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-sm font-medium transition-all"
-      >
-        In Progress
-      </button>
-    )
-  }
-
   if (order.status === 'in_progress') {
     return (
       <button
@@ -83,22 +71,26 @@ function ActionButton({
   return null
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    accepted: 'bg-blue-100 text-blue-700',
+function StatusBadge({ status }: { status: OrderStatus }) {
+  const styles: Record<OrderStatus, string> = {
+    paid: 'bg-blue-100 text-blue-700',
     in_progress: 'bg-amber-100 text-amber-700',
     ready: 'bg-green-100 text-green-700',
+    completed: 'bg-gray-100 text-gray-500',
+    rejected: 'bg-red-100 text-red-600',
   }
 
-  const labels: Record<string, string> = {
-    accepted: 'Accepted',
+  const labels: Record<OrderStatus, string> = {
+    paid: 'Paid',
     in_progress: 'In Progress',
     ready: 'Ready',
+    completed: 'Completed',
+    rejected: 'Rejected',
   }
 
   return (
-    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status] ?? 'bg-gray-100 text-gray-500'}`}>
-      {labels[status] ?? status}
+    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status]}`}>
+      {labels[status]}
     </span>
   )
 }

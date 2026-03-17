@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import supabase from '@/utils/client'
-import type { Order } from '@/types'
+import { acceptOrder as acceptOrderAction, adjustOrderStatus } from '@/app/(dashboard)/admin/live-orders/action'
+import type { Order, OrderStatus } from '@/types'
 
-const ACTIVE_STATUSES = ['paid', 'accepted', 'in_progress', 'ready']
+const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
 
 interface OrdersContextValue {
   queue: Order[]
@@ -12,7 +13,7 @@ interface OrdersContextValue {
   liveOrders: Order[]
   acceptOrder: (id: string) => Promise<void>
   rejectOrder: (id: string) => Promise<void>
-  updateStatus: (id: string, status: string) => Promise<void>
+  updateStatus: (id: string, status: OrderStatus) => Promise<void>
 }
 
 const OrdersContext = createContext<OrdersContextValue | null>(null)
@@ -36,7 +37,9 @@ export function OrdersProvider({
     initialOrders.filter((o) => o.status === 'paid')
   )
   const [liveOrders, setLiveOrders] = useState<Order[]>(
-    initialOrders.filter((o) => ['accepted', 'in_progress', 'ready'].includes(o.status))
+    initialOrders.filter((o) =>
+      (['in_progress', 'ready'] as OrderStatus[]).includes(o.status as OrderStatus)
+    )
   )
   const queueRef = useRef<Order[]>([])
 
@@ -44,7 +47,6 @@ export function OrdersProvider({
     queueRef.current = queue
   }, [queue])
 
-  // Realtime subscription — re-subscribes if restaurantId changes
   useEffect(() => {
     if (!restaurantId) return
 
@@ -68,13 +70,17 @@ export function OrdersProvider({
           const order = payload.new as Order
           if (order.restaurant_id !== restaurantId) return
 
-          if (order.status === 'accepted') {
+          if (order.status === 'in_progress') {
             setQueue((prev) => prev.filter((o) => o.id !== order.id))
-            setLiveOrders((prev) => [...prev, order])
+            setLiveOrders((prev) => {
+              const exists = prev.find((o) => o.id === order.id)
+              if (exists) return prev.map((o) => o.id === order.id ? order : o)
+              return [...prev, order]
+            })
             return
           }
 
-          if (['completed', 'rejected'].includes(order.status)) {
+          if ((['completed', 'rejected'] as OrderStatus[]).includes(order.status as OrderStatus)) {
             setLiveOrders((prev) => prev.filter((o) => o.id !== order.id))
             setQueue((prev) => prev.filter((o) => o.id !== order.id))
             return
@@ -93,24 +99,30 @@ export function OrdersProvider({
   const acceptOrder = useCallback(async (id: string) => {
     setQueue((prev) => prev.filter((o) => o.id !== id))
     const order = queueRef.current.find((o) => o.id === id)
-    if (order) setLiveOrders((prev) => [...prev, { ...order, status: 'accepted' }])
-    await supabase.from('orders').update({ status: 'accepted' }).eq('id', id)
+    if (order) setLiveOrders((prev) => [...prev, { ...order, status: 'in_progress' as OrderStatus }])
+
+    const { error } = await acceptOrderAction(id)
+    if (error) console.error('Failed to accept order:', JSON.stringify(error))
   }, [])
 
   const rejectOrder = useCallback(async (id: string) => {
     setQueue((prev) => prev.filter((o) => o.id !== id))
-    await supabase.from('orders').update({ status: 'rejected' }).eq('id', id)
+
+    const { error } = await adjustOrderStatus(id, 'rejected' as OrderStatus)
+    if (error) console.error('Failed to reject order:', error)
   }, [])
 
-  const updateStatus = useCallback(async (id: string, status: string) => {
-    if (['completed', 'rejected'].includes(status)) {
+  const updateStatus = useCallback(async (id: string, status: OrderStatus) => {
+    if ((['completed', 'rejected'] as OrderStatus[]).includes(status)) {
       setLiveOrders((prev) => prev.filter((o) => o.id !== id))
     } else {
       setLiveOrders((prev) =>
         prev.map((o) => (o.id === id ? { ...o, status } : o))
       )
     }
-    await supabase.from('orders').update({ status }).eq('id', id)
+
+    const { error } = await adjustOrderStatus(id, status)
+    if (error) console.error('Failed to update order status:', error)
   }, [])
 
   const currentNotification = queue[0] ?? null
@@ -120,4 +132,4 @@ export function OrdersProvider({
       {children}
     </OrdersContext.Provider>
   )
-}
+} 

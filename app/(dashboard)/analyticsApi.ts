@@ -48,7 +48,7 @@ export async function getWeeklySales(restaurantId: number) {
     .from('orders')
     .select('created_at, total_cents')
     .eq('restaurant_id', restaurantId)
-    .in('status', ['paid', 'picked_up'])
+    .in('status', ['paid', 'completed'])
     .gte('created_at', sevenDaysAgo.toISOString())
   
   // rest of grouping logic stays the same

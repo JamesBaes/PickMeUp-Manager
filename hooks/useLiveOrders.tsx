@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import supabase from '@/utils/client'
-import type { Order } from '@/types'
+import { adjustOrderStatus } from '@/app/(dashboard)/admin/live-orders/action'
+import type { Order, OrderStatus } from '@/types'
 
-const ACTIVE_STATUSES = ['paid', 'accepted', 'in_progress', 'ready']
-const DONE_STATUSES = ['completed', 'rejected']
+const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
+const DONE_STATUSES: OrderStatus[] = ['completed', 'rejected']
 
 interface UseLiveOrdersOptions {
   restaurantId?: number
@@ -15,7 +16,6 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
-  // initial fetch from orders table
   useEffect(() => {
     async function fetchOrders() {
       let query = supabase
@@ -36,7 +36,6 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
     fetchOrders()
   }, [restaurantId])
 
-  // Realtime subscription
   useEffect(() => {
     const filter = restaurantId
       ? `restaurant_id=eq.${restaurantId}`
@@ -55,14 +54,14 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newOrder = payload.new as Order
-            if (ACTIVE_STATUSES.includes(newOrder.status)) {
+            if (ACTIVE_STATUSES.includes(newOrder.status as OrderStatus)) {
               setOrders((prev) => [...prev, newOrder])
             }
           }
 
           if (payload.eventType === 'UPDATE') {
             const updated = payload.new as Order
-            if (DONE_STATUSES.includes(updated.status)) {
+            if (DONE_STATUSES.includes(updated.status as OrderStatus)) {
               setOrders((prev) => prev.filter((o) => o.id !== updated.id))
             } else {
               setOrders((prev) =>
@@ -84,7 +83,7 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
   }, [restaurantId])
 
   const updateStatus = useCallback(
-    async (id: string, status: string) => {
+    async (id: string, status: OrderStatus) => {
       // Optimistic update
       setOrders((prev) => {
         if (DONE_STATUSES.includes(status)) {
@@ -93,14 +92,11 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
         return prev.map((o) => (o.id === id ? { ...o, status } : o))
       })
 
-      const { error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', id)
+      const { error } = await adjustOrderStatus(id, status)
 
       if (error) {
         console.error('Failed to update order status:', error)
-        // Revert optimistic update on failure by re-fetching
+        // Revert optimistic update on failure
         const { data } = await supabase
           .from('orders')
           .select('*')
@@ -111,11 +107,13 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
         }
       }
     },
-    [supabase]
+    []
   )
 
   const incoming = orders.filter((o) => o.status === 'paid')
-  const accepted = orders.filter((o) => ['accepted', 'in_progress', 'ready'].includes(o.status))
+  const accepted = orders.filter((o) =>
+    (['in_progress', 'ready'] as OrderStatus[]).includes(o.status as OrderStatus)
+  )
 
   return { incoming, accepted, loading, updateStatus }
 }
