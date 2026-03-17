@@ -2,6 +2,7 @@
 
 import { useOrders } from '@/context/OrdersContext'
 import LiveOrderCard from '@/components/orders/LiveOrderCard'
+import Toast from '@/components/ui/Toast'
 
 export default function LiveOrdersPage() {
   const { liveOrders } = useOrders()
@@ -19,6 +20,8 @@ export default function LiveOrdersPage() {
           ))}
         </div>
       )}
+
+      <Toast />
     </div>
   )
 }

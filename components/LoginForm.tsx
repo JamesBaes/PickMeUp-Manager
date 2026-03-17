@@ -7,8 +7,11 @@ import { login } from "@/app/actions/login";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
-
-export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: string}) {
+export default function LoginForm({
+  forgotPasswordLink,
+}: {
+  forgotPasswordLink: string;
+}) {
   const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +66,10 @@ export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: s
       <form action={handleLogin} className="space-y-5 w-full">
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block font-heading font-medium text-base sm:text-xl text-gray-700 mb-2">
+          <label
+            htmlFor="email"
+            className="block font-heading font-medium text-base sm:text-xl text-gray-700 mb-2"
+          >
             Email
           </label>
           <input
@@ -79,7 +85,10 @@ export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: s
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block font-heading font-medium text-gray-700 text-base sm:text-xl mb-2">
+          <label
+            htmlFor="password"
+            className="block font-heading font-medium text-gray-700 text-base sm:text-xl mb-2"
+          >
             Password
           </label>
           <div className="relative">
@@ -105,7 +114,10 @@ export default function LoginForm({ forgotPasswordLink }: {forgotPasswordLink: s
 
         {/* Forgot Password */}
         <div className="text-right font-body">
-          <Link href={forgotPasswordLink} className="text-sm underline text-[#0074BF] hover:text-[#026cb3]">
+          <Link
+            href={forgotPasswordLink}
+            className="text-sm underline text-[#0074BF] hover:text-[#026cb3]"
+          >
             Forgot password?
           </Link>
         </div>
