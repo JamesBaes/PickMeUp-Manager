@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from './server'
+import { createClient } from '@/utils/server'
 
 export interface MenuItem {
   item_id: number

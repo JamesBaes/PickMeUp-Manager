@@ -1,6 +1,7 @@
 import supabase from "@/utils/client";
 
 export const fetchStaff = async () => {
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role')

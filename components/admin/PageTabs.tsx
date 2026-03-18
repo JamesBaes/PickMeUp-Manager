@@ -14,14 +14,14 @@ export default function PageTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4">
       {tabs.map(({ label, route, icon: Icon }) => {
         const isActive = pathname === route;
         return (
           <Link
             key={route}
             href={route}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium font-body border transition
+            className={`flex items-center gap-2 px-7 py-4 rounded-xl text-sm font-medium font-body border transition
               ${isActive
                 ? "bg-green-100 text-green-700 border-green-200"
                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"

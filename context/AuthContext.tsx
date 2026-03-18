@@ -16,20 +16,24 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({children}: { children: React.ReactNode}) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
 
   {/* Fetches current user on first render, listens for any changes in auth state  */}
   useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    const supabaseClient = supabase;
+
     const fetchUser = async() => {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await supabaseClient.auth.getUser();
       setUser(data.user);
-      setLoading(false);
     }
 
     fetchUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 

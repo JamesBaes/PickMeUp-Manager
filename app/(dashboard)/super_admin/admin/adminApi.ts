@@ -1,13 +1,10 @@
-'use server'
-import { createClient } from "@/utils/server";
+import supabase from "@/utils/client";
 
 export const fetchAdmins = async () => {
-
-  const supabase = await createClient();
-
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, email, role')
+    .select('id, name, email, role, restaurant_id')
     .eq('role', 'admin')
 
   if (error) {
@@ -17,11 +14,25 @@ export const fetchAdmins = async () => {
   return data;
 }
 
-export const addAdmin = async (name: string, email: string) => {
+export const fetchRestaurantLocations = async () => {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('restaurant_locations')
+    .select('restaurant_id, location_name')
+    .order('location_name', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching restaurant locations:', error)
+    return [];
+  }
+  return data;
+}
+
+export const addAdmin = async (name: string, email: string, restaurant_id: number) => {
   const res = await fetch('/api/admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email }),
+    body: JSON.stringify({ name, email, restaurant_id }),
   });
 
   if (!res.ok) {
@@ -33,7 +44,6 @@ export const addAdmin = async (name: string, email: string) => {
   return res.json();
 };
 
-  
 export const deactivateAdmin = async (id: string) => {
   const res = await fetch('/api/admin', {
     method: 'DELETE',

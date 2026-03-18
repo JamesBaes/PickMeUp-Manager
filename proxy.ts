@@ -7,6 +7,13 @@ import { createServerClient } from '@supabase/ssr'
 
 
 export async function proxy(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // When env vars are missing, keep routing available for local UI work.
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request });
+  }
 
   // update user's auth session
   const response = await updateSession(request)
@@ -54,7 +61,7 @@ export async function proxy(request: NextRequest) {
 
   // unauthenticated users get redirected back to login
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL('', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   // staff accessing admin routes redirect to staff
