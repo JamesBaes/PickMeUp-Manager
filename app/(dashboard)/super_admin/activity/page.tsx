@@ -1,26 +1,25 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import MenuList from '@/components/menu/menuList'
+import ActivityLogList from '../../../../components/super_admin/ActivityLogList'
 
-interface MenuItem {
-  item_id: number
-  name: string
-  price: number
-  description: string
-  category: string
-  calories: number
-  allergy_information: string
+interface LogItem {
+  id: string
+  changed_at: string
+  operation: string
+  record_pk: string
+  changed_by: string
+  txid: number
 }
 
-const MenuPage = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+const ActivityPage = () => {
+  const [logs, setLogs] = useState<LogItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchMenuItems = async () => {
+    const fetchLogs = async () => {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -30,13 +29,13 @@ const MenuPage = () => {
         }
 
         const supabase = createClient(supabaseUrl, supabaseKey)
-
         const { data, error } = await supabase
-          .from('menu_items')
-          .select('*')
+          .from('logs')
+          .select('id, changed_at, operation, record_pk, changed_by, txid')
+          .order('changed_at', { ascending: false })
 
         if (error) throw error
-        setMenuItems(data || [])
+        setLogs((data as LogItem[]) || [])
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred'
         setError(errorMessage)
@@ -45,7 +44,7 @@ const MenuPage = () => {
       }
     }
 
-    fetchMenuItems()
+    fetchLogs()
   }, [])
 
   if (loading) return <div className="p-4">Loading...</div>
@@ -54,12 +53,12 @@ const MenuPage = () => {
   return (
     <div className="p-6 relative">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Menu Items</h1>
+        <h1 className="text-3xl font-bold">Activity Logs</h1>
       </div>
 
-      <MenuList menuItems={menuItems} />
+      <ActivityLogList logs={logs} />
     </div>
   )
 }
 
-export default MenuPage
+export default ActivityPage
