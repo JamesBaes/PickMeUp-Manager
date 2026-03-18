@@ -22,4 +22,6 @@ export interface Order {
   billing_country: string | null
   receipt_token: string
   restaurant_id: number | null
+  refunder_name: string | null
+  refund_reason: string | null
 }

@@ -19,7 +19,7 @@ interface OrdersContextValue {
   acceptOrder: (id: string) => Promise<void>
   rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
-  refundOrder: (id: string) => Promise<void>
+  refundOrder: (id: string, reason: string, staffName: string) => Promise<void>
   toast: ToastMessage | null
   clearToast: () => void
 }
@@ -123,12 +123,12 @@ export function OrdersProvider({
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const clearToast = useCallback(() => setToast(null), [])
 
-  const refundOrder = useCallback(async (id: string) => {
+  const refundOrder = useCallback(async (id: string, reason: string, staffName: string) => {
     try {
       const res = await fetch('/api/refund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: id }),
+        body: JSON.stringify({ orderId: id, reason, staffName }),
       })
       if (res.ok) {
         setLiveOrders((prev) => prev.filter((o) => o.id !== id))
