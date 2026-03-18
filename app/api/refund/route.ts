@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Parse body
-  const { orderId } = await req.json()
+  const { orderId, reason, staffName } = await req.json()
   if (!orderId) {
     return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
   }
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   // Update order status in Supabase
   const { error: updateError } = await supabase
     .from('orders')
-    .update({ status: 'refunded' })
+    .update({ status: 'refunded', refunder_name: staffName ?? null, refund_reason: reason ?? null })
     .eq('id', orderId)
 
   if (updateError) {
