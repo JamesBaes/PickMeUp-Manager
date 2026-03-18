@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Store, UtensilsCrossed } from "lucide-react";
+import { useRestaurant } from "@/context/RestaurantContext";
 
-const tabs = [
-  { label: "Dashboard", route: "/admin", icon: LayoutDashboard },
-  { label: "Live Orders", route: "/admin/live-orders", icon: Store },
-  { label: "Menu", route: "/admin/menu", icon: UtensilsCrossed },
+const allTabs = [
+  { label: "Dashboard", route: "/admin", icon: LayoutDashboard, adminOnly: false },
+  { label: "Live Orders", route: "/admin/live-orders", icon: Store, adminOnly: false },
+  { label: "Menu", route: "/admin/menu", icon: UtensilsCrossed, adminOnly: true },
 ];
 
 export default function PageTabs() {
   const pathname = usePathname();
+  const { isAdmin } = useRestaurant();
+
+  const tabs = allTabs.filter((t) => !t.adminOnly || isAdmin);
 
   return (
     <div className="flex items-center gap-4">

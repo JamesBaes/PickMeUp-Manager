@@ -15,11 +15,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
   // fetch restaurant_id from profiles
   const { data: profile } = await supabase
     .from('profiles')
-    .select('restaurant_id')
+    .select('restaurant_id, role')
     .eq('id', user?.id)
     .single()
 
   const restaurantId = profile?.restaurant_id ?? null
+  const role = profile?.role ?? null
 
   // fetch initial orders for this restaurant
   const { data: initialOrders } = await supabase
@@ -30,7 +31,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     .order('created_at', { ascending: true })
 
   return (
-    <RestaurantProvider initialRestaurantId={restaurantId}>
+    <RestaurantProvider initialRestaurantId={restaurantId} initialRole={role}>
       <OrdersProvider initialOrders={initialOrders ?? []} restaurantId={restaurantId}>
         <div className="flex min-h-screen bg-lightbg">
           <aside className="sticky top-0 h-screen min-w-24 max-w-24 bg-white border-r border-gray-200 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)]">

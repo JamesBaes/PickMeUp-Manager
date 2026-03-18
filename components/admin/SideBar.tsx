@@ -1,35 +1,37 @@
-"use client"
+'use client'
 
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '../LogoutButton'
 import Image from 'next/image'
-import { LayoutDashboard, Zap, History, UtensilsCrossed, Package, Users } from 'lucide-react'
+import { LayoutDashboard, Zap, History, UtensilsCrossed, Users } from 'lucide-react'
+import { useRestaurant } from '@/context/RestaurantContext'
 
-const adminPageLinks = [
-  { page: "Dashboard", route: "/admin", icon: LayoutDashboard },
-  { page: "Live Orders", route: "/admin/live-orders", icon: Zap },
-  { page: "Order History", route: "/admin/order-history", icon: History },
-  { page: "Menu", route: "/admin/menu", icon: UtensilsCrossed },
-  { page: "Staff", route: "/admin/staff", icon: Users },
+const allPageLinks = [
+  { page: "Dashboard", route: "/admin", icon: LayoutDashboard, adminOnly: false },
+  { page: "Live Orders", route: "/admin/live-orders", icon: Zap, adminOnly: false },
+  { page: "Order History", route: "/admin/order-history", icon: History, adminOnly: false },
+  { page: "Menu", route: "/admin/menu", icon: UtensilsCrossed, adminOnly: false },
+  { page: "Staff", route: "/admin/staff", icon: Users, adminOnly: true },
 ]
 
 const SideBar = () => {
   const pathname = usePathname()
+  const { isAdmin } = useRestaurant()
+
+  const pageLinks = allPageLinks.filter((p) => !p.adminOnly || isAdmin)
 
   return (
     <nav className='flex flex-col w-full h-screen bg-white border-r border-gray-100 shadow-sm items-center py-4 gap-2'>
-      {/* Logo */}
       <div className="relative group flex items-center justify-center mb-6">
         <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center">
           <Image src="/circle-logo.png" alt="Pick Me Up Logo" width={56} height={56} />
         </div>
       </div>
 
-      {/* Links */}
       <div className="flex flex-col gap-6 w-full px-2 items-center pt-2 flex-1">
-        {adminPageLinks.map((page, index) => {
+        {pageLinks.map((page, index) => {
           const isActive = pathname === page.route
           const Icon = page.icon
           return (
@@ -37,10 +39,7 @@ const SideBar = () => {
               <Link
                 href={page.route}
                 className={`flex items-center justify-center w-full p-3.5 rounded-xl transition
-                  ${isActive 
-                    ? 'bg-green-50' 
-                    : 'hover:bg-green-50'
-                  }`}
+                  ${isActive ? 'bg-green-50' : 'hover:bg-green-50'}`}
               >
                 <Icon className={`w-6 h-6 ${isActive ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`} />
               </Link>
@@ -52,7 +51,6 @@ const SideBar = () => {
         })}
       </div>
 
-      {/* Logout */}
       <div className="w-full px-2 pb-4 pt-6 border-t border-gray-100">
         <LogoutButton />
       </div>

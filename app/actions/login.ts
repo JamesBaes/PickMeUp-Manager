@@ -29,11 +29,7 @@ export async function login(email: string, password: string) {
   
   const role = profile?.role;
 
-  if (role === "staff") {
-    return { success: true, redirectTo: "/staff" };
-  }
-
-  if (role === "admin") {
+  if (role === "admin" || "staff") {
     return { success: true, redirectTo: "/admin" };
   }
 

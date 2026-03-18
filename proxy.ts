@@ -8,9 +8,7 @@ import { createServerClient } from '@supabase/ssr'
 
 export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
   // When env vars are missing, keep routing available for local UI work.
   if (!supabaseUrl || !supabaseKey) {
@@ -52,10 +50,12 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
     
-  const protectedRoutes = ["/admin", "/staff", "/super_admin"]
+  const adminOnlyRoutes = ['/admin/staff', '/admin/menu/add', '/admin/menu/edit']
+  const protectedRoutes = ["/admin", "/super_admin"]
   const publicRoutes = ['/', '/forgot-password', '/reset-password']
   const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
   const isPublicRoute = publicRoutes.includes(path)
+  const isAdminOnlyRoute = adminOnlyRoutes.some((route) => path.startsWith(route))
 
   if (isPublicRoute) {
     return response
@@ -66,25 +66,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // staff accessing admin routes redirect to staff
-  if (user && path.startsWith('/admin') && role ==='staff') {
-    return NextResponse.redirect(new URL('/staff', request.url))
-  }
-
-  // admin accessing staff routes redirect to admin
-  if (user && path.startsWith('/staff') && role ==='admin') {
+  if (user && isAdminOnlyRoute && role === 'staff') {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
-  // super_admin accessing staff routes redirect to super_admin
-  if (user && path.startsWith('/staff') && role ==='super_admin') {
-    return NextResponse.redirect(new URL('/super_admin', request.url))
-  }
 
   // super_admin accessing admin routes redirect to super_admin
   if (user && path.startsWith('/admin') && role ==='super_admin') {
     return NextResponse.redirect(new URL('/super_admin', request.url))
   }
+
 
   // admin accessing super_admin routes redirect to admin
   if (user && path.startsWith('/super_admin') && role ==='admin') {
@@ -93,7 +84,7 @@ export async function proxy(request: NextRequest) {
 
   // staff accessing super_admin routes redirect to staff
   if (user && path.startsWith('/super_admin') && role ==='staff') {
-    return NextResponse.redirect(new URL('/staff', request.url))
+    return NextResponse.redirect(new URL('/admin', request.url))
   }
 
 
