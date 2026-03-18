@@ -165,22 +165,20 @@ function ActionButton({
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   const styles: Record<OrderStatus, string> = {
-    paid: "bg-blue-100 text-blue-700",
-    in_progress: "bg-amber-100 text-amber-700",
-    ready: "bg-green-100 text-green-700",
-    completed: "bg-gray-100 text-gray-500",
-    rejected: "bg-red-100 text-red-600",
-    refunded: "bg-purple-100 text-purple-600",
-  };
+    paid: 'bg-blue-100 text-blue-700',
+    in_progress: 'bg-amber-100 text-amber-700',
+    ready: 'bg-green-100 text-green-700',
+    completed: 'bg-gray-100 text-gray-500',
+    refunded: 'bg-red-100 text-red-600',
+  }
 
   const labels: Record<OrderStatus, string> = {
-    paid: "Paid",
-    in_progress: "In Progress",
-    ready: "Ready",
-    completed: "Completed",
-    rejected: "Rejected",
-    refunded: "Refunded",
-  };
+    paid: 'Paid',
+    in_progress: 'In Progress',
+    ready: 'Ready',
+    completed: 'Completed',
+    refunded: 'Refunded',
+  }
 
   return (
     <span
