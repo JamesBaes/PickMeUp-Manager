@@ -1,9 +1,9 @@
 'use server'
 import { createClient } from "@/utils/server"
 
-export const getAllOrders = async (restaurantId: string) => {
+export const getAllOrders = async (restaurantId: number) => {
   const supabase = await createClient();
-
+  
   const { data, error } = await supabase
     .from('sales')
     .select('*')

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import supabase from '@/utils/client'
 import MenuList from '@/components/menu/menuList'
 
 interface MenuItem {
@@ -22,15 +22,6 @@ const MenuPage = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error('Missing Supabase environment variables')
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseKey)
-
         const { data, error } = await supabase
           .from('menu_items')
           .select('*')

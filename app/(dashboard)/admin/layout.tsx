@@ -26,7 +26,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const { data: initialOrders } = await supabase
     .from('orders')
     .select('*')
-    .in('status', ['paid', 'accepted', 'in_progress', 'ready'])
+    .in('status', ['paid', 'in_progress', 'ready'])
     .eq('restaurant_id', restaurantId)
     .order('created_at', { ascending: true })
 
