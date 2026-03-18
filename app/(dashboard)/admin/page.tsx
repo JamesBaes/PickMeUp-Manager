@@ -4,7 +4,7 @@ import { getAnalytics, getTodaysOrders, getWeeklySales } from '../analyticsApi';
 import OrdersTable from '@/components/orders/OrdersTable';
 import TopItemsChart from '@/components/charts/TopItemsChart';
 import VisitorsDonutChart from '@/components/charts/VisitorsDonutChart';
-import { getRestaurantInfo } from '@/utils/getRestaurantInfo';
+import { getRestaurantInfo } from '@/app/(dashboard)/getRestaurantInfo';
 
 const HomePage = async () => {
 

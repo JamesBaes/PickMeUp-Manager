@@ -5,8 +5,8 @@ import supabase from '@/utils/client'
 import { adjustOrderStatus } from '@/app/(dashboard)/admin/live-orders/action'
 import type { Order, OrderStatus } from '@/types'
 
-const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
-const DONE_STATUSES: OrderStatus[] = ['completed', 'rejected']
+const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready',]
+const DONE_STATUSES: OrderStatus[] = ['completed', 'refunded']
 
 interface UseLiveOrdersOptions {
   restaurantId?: number
