@@ -7,6 +7,11 @@ import type { Order, OrderStatus } from '@/types'
 
 const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
 
+interface ToastMessage {
+  message: string
+  type: 'success' | 'error'
+}
+
 interface OrdersContextValue {
   queue: Order[]
   currentNotification: Order | null
@@ -14,6 +19,9 @@ interface OrdersContextValue {
   acceptOrder: (id: string) => Promise<void>
   rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
+  refundOrder: (id: string, reason: string, staffName: string) => Promise<void>
+  toast: ToastMessage | null
+  clearToast: () => void
 }
 
 const OrdersContext = createContext<OrdersContextValue | null>(null)
@@ -80,7 +88,7 @@ export function OrdersProvider({
             return
           }
 
-          if ((['completed', 'rejected'] as OrderStatus[]).includes(order.status as OrderStatus)) {
+          if ((['completed', 'rejected', 'refunded'] as OrderStatus[]).includes(order.status as OrderStatus)) {
             setLiveOrders((prev) => prev.filter((o) => o.id !== order.id))
             setQueue((prev) => prev.filter((o) => o.id !== order.id))
             return
@@ -112,6 +120,30 @@ export function OrdersProvider({
     if (error) console.error('Failed to reject order:', error)
   }, [])
 
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+  const clearToast = useCallback(() => setToast(null), [])
+
+  const refundOrder = useCallback(async (id: string, reason: string, staffName: string) => {
+    try {
+      const res = await fetch('/api/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id, reason, staffName }),
+      })
+      if (res.ok) {
+        setLiveOrders((prev) => prev.filter((o) => o.id !== id))
+        setToast({ message: 'Refund issued successfully', type: 'success' })
+      } else {
+        const body = await res.json().catch(() => ({}))
+        console.error('Refund failed:', body.error ?? res.statusText)
+        setToast({ message: body.error ?? 'Refund failed', type: 'error' })
+      }
+    } catch (err) {
+      console.error('Refund request threw:', err)
+      setToast({ message: 'Refund failed — network error', type: 'error' })
+    }
+  }, [])
+
   const updateStatus = useCallback(async (id: string, status: OrderStatus) => {
     if ((['completed', 'rejected'] as OrderStatus[]).includes(status)) {
       setLiveOrders((prev) => prev.filter((o) => o.id !== id))
@@ -128,8 +160,8 @@ export function OrdersProvider({
   const currentNotification = queue[0] ?? null
 
   return (
-    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus }}>
+    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast }}>
       {children}
     </OrdersContext.Provider>
   )
-} 
+}
