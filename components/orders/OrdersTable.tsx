@@ -104,12 +104,6 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             visible.map((order) => (
               <tr key={order.id} className="border-b font-body border-gray-50 hover:bg-gray-50 transition">
                 <td className="py-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(order.id)}
-                    onChange={() => toggleSelect(order.id)}
-                    className="rounded border-gray-300"
-                  />
                 </td>
                 <td className="py-3 font-body text-gray-500 text-xs">{order.id.slice(0, 8).toUpperCase()}</td>
                 <td className="py-3 font-body text-gray-400 text-xs">
