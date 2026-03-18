@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { createMenuItem } from '@/u/menu'
+import { createMenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
 interface MenuItem {
   item_id: number
