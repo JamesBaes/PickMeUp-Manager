@@ -5,7 +5,7 @@ import { createAdminClient, createClient } from "@/utils/server";
 const checkSuperAdmin = async () => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized' }
+  if (!user) return { error: 'Unauthorized', supabase: null }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -13,14 +13,14 @@ const checkSuperAdmin = async () => {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'super_admin') return { error: 'Forbidden' }
+  if (profile?.role !== 'super_admin') return { error: 'Forbidden', supabase: null }
 
-  return { error: null }
+  return { error: null, supabase }
 }
 
 export const fetchAdmins = async () => {
-  const admin = await createAdminClient()
-  const { data, error } = await admin
+  const supabase = await createClient()
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role, restaurant_id')
     .eq('role', 'admin')
@@ -47,8 +47,8 @@ export const fetchRestaurantLocations = async () => {
 }
 
 export const addAdmin = async (name: string, email: string, restaurant_id: number) => {
-  const { error } = await checkSuperAdmin()
-  if (error) {
+  const { error, supabase } = await checkSuperAdmin()
+  if (error || !supabase) {
     console.error('Auth error:', error)
     return null
   }
@@ -58,15 +58,13 @@ export const addAdmin = async (name: string, email: string, restaurant_id: numbe
     return null
   }
 
-  const admin = await createAdminClient()
-
-  const { data: authData, error: authError } = await admin.auth.admin.inviteUserByEmail(email)
+  const { data: authData, error: authError } = await createAdminClient().auth.admin.inviteUserByEmail(email)
   if (authError) {
     console.error('Invite error:', authError)
     return null
   }
 
-  const { data, error: upsertError } = await admin
+  const { data, error: upsertError } = await supabase
     .from('profiles')
     .upsert({ id: authData.user.id, name, email, role: 'admin', restaurant_id })
     .select()
@@ -87,9 +85,7 @@ export const deactivateAdmin = async (id: string) => {
     return false
   }
 
-  const admin = await createAdminClient()
-
-  const { error: deleteError } = await admin.auth.admin.deleteUser(id)
+  const { error: deleteError } = await createAdminClient().auth.admin.deleteUser(id)
   if (deleteError) {
     console.error('Delete user error:', deleteError)
     return false

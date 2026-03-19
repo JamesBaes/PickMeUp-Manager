@@ -29,6 +29,7 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
       }
 
       const { data, error } = await query
+      console.log('[useLiveOrders] fetch result:', { data, error, restaurantId })
       if (!error && data) setOrders(data)
       setLoading(false)
     }
@@ -52,6 +53,7 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
           ...(filter ? { filter } : {}),
         },
         (payload) => {
+          console.log('[useLiveOrders] realtime payload:', payload)
           if (payload.eventType === 'INSERT') {
             const newOrder = payload.new as Order
             if (ACTIVE_STATUSES.includes(newOrder.status as OrderStatus)) {
@@ -75,7 +77,9 @@ export function useLiveOrders({ restaurantId }: UseLiveOrdersOptions = {}) {
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[useLiveOrders] subscription status:', status)
+      })
 
     return () => {
       supabase.removeChannel(channel)

@@ -4,23 +4,13 @@ import PageTabs from '@/components/admin/PageTabs'
 import NotificationModal from '@/components/orders/NotificationModal'
 import { OrdersProvider } from '@/context/OrdersContext'
 import { RestaurantProvider } from '@/context/RestaurantContext'
-import { createAdminClient } from '@/utils/server'
+import { createClient } from '@/utils/server'
+import { getRestaurantInfo } from '@/app/(dashboard)/getRestaurantInfo'
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const supabase = await createAdminClient()
+  const { restaurantId, role } = await getRestaurantInfo()
 
-  // get current user
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // fetch restaurant_id from profiles
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('restaurant_id, role')
-    .eq('id', user?.id)
-    .single()
-
-  const restaurantId = profile?.restaurant_id ?? null
-  const role = profile?.role ?? null
+  const supabase = await createClient()
 
   // fetch initial orders for this restaurant
   const { data: initialOrders } = await supabase

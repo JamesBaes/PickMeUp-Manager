@@ -5,7 +5,7 @@ import { createAdminClient, createClient } from "@/utils/server";
 const getAdminContext = async () => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized', restaurantId: null, role: null }
+  if (!user) return { error: 'Unauthorized', restaurantId: null, role: null, supabase: null }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -14,15 +14,15 @@ const getAdminContext = async () => {
     .single()
 
   if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
-    return { error: 'Forbidden', restaurantId: null, role: null }
+    return { error: 'Forbidden', restaurantId: null, role: null, supabase: null }
   }
 
-  return { error: null, restaurantId: profile.restaurant_id, role: profile.role }
+  return { error: null, restaurantId: profile.restaurant_id, role: profile.role, supabase }
 }
 
 export const fetchStaff = async () => {
-  const admin = await createAdminClient()
-  const { data, error } = await admin
+  const supabase = await createClient()
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, name, email, role, restaurant_id')
     .eq('role', 'staff')
@@ -35,21 +35,19 @@ export const fetchStaff = async () => {
 }
 
 export const addStaff = async (name: string, email: string) => {
-  const { error, restaurantId } = await getAdminContext()
-  if (error || !restaurantId) {
+  const { error, restaurantId, supabase } = await getAdminContext()
+  if (error || !restaurantId || !supabase) {
     console.error('Auth error:', error)
     return null
   }
 
-  const admin = await createAdminClient()
-
-  const { data: authData, error: authError } = await admin.auth.admin.inviteUserByEmail(email)
+  const { data: authData, error: authError } = await createAdminClient().auth.admin.inviteUserByEmail(email)
   if (authError) {
     console.error('Invite error:', authError)
     return null
   }
 
-  const { data, error: upsertError } = await admin
+  const { data, error: upsertError } = await supabase
     .from('profiles')
     .upsert({ id: authData.user.id, name, email, role: 'staff', restaurant_id: restaurantId })
     .select()
@@ -64,15 +62,13 @@ export const addStaff = async (name: string, email: string) => {
 }
 
 export const deactivateStaff = async (id: string) => {
-  const { error, restaurantId, role } = await getAdminContext()
-  if (error || !restaurantId) {
+  const { error, restaurantId, role, supabase } = await getAdminContext()
+  if (error || !restaurantId || !supabase) {
     console.error('Auth error:', error)
     return false
   }
 
-  const admin = await createAdminClient()
-
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from('profiles')
     .select('restaurant_id')
     .eq('id', id)
@@ -88,7 +84,7 @@ export const deactivateStaff = async (id: string) => {
     return false
   }
 
-  const { error: deleteError } = await admin.auth.admin.deleteUser(id)
+  const { error: deleteError } = await createAdminClient().auth.admin.deleteUser(id)
   if (deleteError) {
     console.error('Delete user error:', deleteError)
     return false
