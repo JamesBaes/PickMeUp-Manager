@@ -46,15 +46,14 @@ const getAdminContext = async () => {
   return { error: null, restaurantId: profile.restaurant_id as number, supabase }
 }
 
-// CREATE: Add a new menu item (insert into menu_items, then link to restaurant)
 export async function createMenuItem(data: CreateMenuItemInput): Promise<{ success: boolean; data?: MenuItem; error?: string }> {
   const { error: authError, restaurantId, supabase } = await getAdminContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
 
-  // Step 1: insert into menu_items to get auto-generated item_id
-  const { data: newItem, error: insertError } = await supabase
-    .from('menu_items')
+  const { data: newItem, error } = await supabase
+    .from('menu_items_restaurant_locations')
     .insert({
+      restaurant_id: restaurantId,
       name: data.name,
       price: data.price,
       description: data.description,
@@ -65,34 +64,14 @@ export async function createMenuItem(data: CreateMenuItemInput): Promise<{ succe
     .select()
     .single()
 
-  if (insertError) {
-    console.error('createMenuItem insert error:', insertError)
-    return { success: false, error: insertError.message }
-  }
-
-  // Step 2: link the item to this restaurant with all fields
-  const { error: linkError } = await supabase
-    .from('menu_items_restaurant_locations')
-    .insert({
-      item_id: newItem.item_id,
-      restaurant_id: restaurantId,
-      name: data.name,
-      price: data.price,
-      description: data.description,
-      category: data.category,
-      calories: data.calories,
-      allergy_information: data.allergy_information,
-    })
-
-  if (linkError) {
-    console.error('createMenuItem link error:', linkError)
-    return { success: false, error: linkError.message }
+  if (error) {
+    console.error('createMenuItem error:', error)
+    return { success: false, error: error.message }
   }
 
   return { success: true, data: newItem }
 }
 
-// READ: Get all menu items for the current restaurant via join table
 export async function getAllMenuItems(): Promise<{ success: boolean; data?: MenuItem[]; error?: string }> {
   const { error: authError, restaurantId, supabase } = await getAdminContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
@@ -108,10 +87,10 @@ export async function getAllMenuItems(): Promise<{ success: boolean; data?: Menu
     return { success: false, error: error.message }
   }
 
-  return { success: true, data: data ?? [] }
+  const unique = Array.from(new Map((data ?? []).map((i) => [i.item_id, i])).values())
+  return { success: true, data: unique }
 }
 
-// UPDATE: Update a menu item (fields live on menu_items, not the join table)
 export async function updateMenuItem(input: UpdateMenuItemInput): Promise<{ success: boolean; data?: MenuItem; error?: string }> {
   const { error: authError, restaurantId, supabase } = await getAdminContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
@@ -134,26 +113,15 @@ export async function updateMenuItem(input: UpdateMenuItemInput): Promise<{ succ
   return { success: true, data }
 }
 
-// DELETE: Remove the restaurant link then delete the item
 export async function deleteMenuItem(itemId: number): Promise<{ success: boolean; error?: string }> {
   const { error: authError, restaurantId, supabase } = await getAdminContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
 
-  const { error: unlinkError } = await supabase
+  const { error } = await supabase
     .from('menu_items_restaurant_locations')
     .delete()
     .eq('item_id', itemId)
     .eq('restaurant_id', restaurantId)
-
-  if (unlinkError) {
-    console.error('deleteMenuItem unlink error:', unlinkError)
-    return { success: false, error: unlinkError.message }
-  }
-
-  const { error } = await supabase
-    .from('menu_items')
-    .delete()
-    .eq('item_id', itemId)
 
   if (error) {
     console.error('deleteMenuItem error:', error)
