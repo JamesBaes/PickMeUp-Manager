@@ -1,49 +1,80 @@
 import React from 'react'
-
-interface MenuItem {
-  item_id: number
-  name: string
-  price: number
-  description: string
-  category: string
-  calories: number
-  allergy_information: string
-}
+import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
 interface MenuListProps {
   menuItems: MenuItem[]
+  isAdmin: boolean
+  deletingId: number | null
+  onEdit: (item: MenuItem) => void
+  onDelete: (id: number) => void
 }
 
-const MenuList: React.FC<MenuListProps> = ({ menuItems }) => {
+const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onEdit, onDelete }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse border border-gray-300">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border border-gray-300 p-2 text-left">ID</th>
-            <th className="border border-gray-300 p-2 text-left">Name</th>
-            <th className="border border-gray-300 p-2 text-left">Price</th>
-            <th className="border border-gray-300 p-2 text-left">Description</th>
-            <th className="border border-gray-300 p-2 text-left">Category</th>
-            <th className="border border-gray-300 p-2 text-left">Calories</th>
-            <th className="border border-gray-300 p-2 text-left">Allergy Info</th>
+    <div className="bg-white rounded-xl shadow overflow-x-auto">
+      <table className="min-w-full">
+        <thead>
+          <tr className="border-b border-gray-100">
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Name</th>
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Category</th>
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Price</th>
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Calories</th>
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Allergy Info</th>
+            {isAdmin && <th />}
           </tr>
         </thead>
         <tbody>
-          {menuItems.map((item) => (
-            <tr key={item.item_id} className="hover:bg-gray-100">
-              <td className="border border-gray-300 p-2">{item.item_id}</td>
-              <td className="border border-gray-300 p-2">{item.name}</td>
-              <td className="border border-gray-300 p-2">${item.price.toFixed(2)}</td>
-              <td className="border border-gray-300 p-2">{item.description}</td>
-              <td className="border border-gray-300 p-2">{item.category}</td>
-              <td className="border border-gray-300 p-2">{item.calories}</td>
-              <td className="border border-gray-300 p-2">{item.allergy_information}</td>
+          {menuItems.length === 0 ? (
+            <tr>
+              <td colSpan={isAdmin ? 6 : 5} className="py-12 text-center text-sm text-gray-400">
+                No menu items yet
+              </td>
             </tr>
-          ))}
+          ) : (
+            menuItems.map((item) => (
+              <tr key={item.item_id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
+                <td className="py-4 px-4 md:px-6">
+                  <div>
+                    <p className="text-sm font-semibold">{item.name}</p>
+                    {item.description && (
+                      <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{item.description}</p>
+                    )}
+                  </div>
+                </td>
+                <td className="py-4 px-4 md:px-6">
+                  <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
+                    {item.category}
+                  </span>
+                </td>
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-700 font-medium">
+                  ${item.price.toFixed(2)}
+                </td>
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-600">{item.calories} kcal</td>
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-500 max-w-xs truncate">{item.allergy_information}</td>
+                {isAdmin && (
+                  <td className="py-4 px-4 md:px-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="text-xs border border-gray-300 text-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-50 active:scale-95 transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => onDelete(item.item_id)}
+                        disabled={deletingId === item.item_id}
+                        className="text-xs border border-red-500 text-red-500 px-3 py-1.5 rounded-md hover:bg-red-50 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === item.item_id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-      {menuItems.length === 0 && <p className="mt-4 text-gray-500">No menu items found.</p>}
     </div>
   )
 }

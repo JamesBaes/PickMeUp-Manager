@@ -1,195 +1,193 @@
 'use client'
 
-import React, { useState } from 'react'
-import { createMenuItem } from '@/app/(dashboard)/admin/menu/menu'
+import React, { useState, useEffect } from 'react'
+import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
-interface MenuItem {
-  item_id: number
-  name: string
-  price: number
-  description: string
-  category: string
-  calories: number
-  allergy_information: string
-}
+type FormData = Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>
 
 interface MenuFormProps {
-  isOpen: boolean
+  mode: 'add' | 'edit'
+  initialData?: MenuItem
   onClose: () => void
-  onItemAdded: (item: MenuItem) => void
+  onSubmit: (data: FormData) => Promise<void>
 }
 
-const MenuForm: React.FC<MenuFormProps> = ({ isOpen, onClose, onItemAdded }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    description: '',
-    category: '',
-    calories: '',
-    allergy_information: ''
-  })
+const empty: FormData = {
+  name: '',
+  price: 0,
+  description: '',
+  category: '',
+  calories: 0,
+  allergy_information: '',
+}
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit }) => {
+  const [form, setForm] = useState<FormData>(
+    initialData
+      ? {
+          name: initialData.name,
+          price: initialData.price,
+          description: initialData.description,
+          category: initialData.category,
+          calories: initialData.calories,
+          allergy_information: initialData.allergy_information,
+        }
+      : empty
+  )
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    setForm(
+      initialData
+        ? {
+            name: initialData.name,
+            price: initialData.price,
+            description: initialData.description,
+            category: initialData.category,
+            calories: initialData.calories,
+            allergy_information: initialData.allergy_information,
+          }
+        : empty
+    )
+  }, [initialData])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
-    
-    try {
-      const result = await createMenuItem({
-        name: formData.name,
-        price: parseFloat(formData.price),
-        description: formData.description,
-        category: formData.category,
-        calories: parseInt(formData.calories),
-        allergy_information: formData.allergy_information
-      })
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create menu item')
-      }
-
-      // Add new item to the list
-      if (result.data) {
-        onItemAdded(result.data)
-      }
-
-      // Reset form and close popup
-      setFormData({
-        name: '',
-        price: '',
-        description: '',
-        category: '',
-        calories: '',
-        allergy_information: ''
-      })
-      onClose()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      alert('Error adding menu item: ' + errorMessage)
-    }
+    setSubmitting(true)
+    await onSubmit({
+      ...form,
+      price: parseFloat(String(form.price)),
+      calories: parseInt(String(form.calories)),
+    })
+    setSubmitting(false)
   }
-
-  if (!isOpen) return null
 
   return (
     <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+      <div
+        className="fixed inset-0 bg-black bg-opacity-30 z-40"
         onClick={onClose}
-      ></div>
+      />
+      <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold">{mode === 'edit' ? 'Edit Item' : 'Add Menu Item'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
-      {/* Popup */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Add Menu Item</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
-              ×
-            </button>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto p-6 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Price</label>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1">Price ($)</label>
               <input
                 type="number"
                 name="price"
-                value={formData.price}
-                onChange={handleInputChange}
+                value={form.price}
+                onChange={handleChange}
                 step="0.01"
+                min="0"
                 required
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Category</label>
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
+            <div className="flex-1">
               <label className="block text-sm font-medium mb-1">Calories</label>
               <input
                 type="number"
                 name="calories"
-                value={formData.calories}
-                onChange={handleInputChange}
+                value={form.calories}
+                onChange={handleChange}
+                min="0"
                 required
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Allergy Information</label>
-              <textarea
-                name="allergy_information"
-                value={formData.allergy_information}
-                onChange={handleInputChange}
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Category</label>
+            <input
+              type="text"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
 
-            <div className="flex gap-2 pt-4">
-              <button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              >
-                Add Item
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Allergy Information</label>
+            <textarea
+              name="allergy_information"
+              value={form.allergy_information}
+              onChange={handleChange}
+              rows={2}
+              required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+            />
+          </div>
+
+          <div className="mt-auto flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
+            >
+              {submitting ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
+            </button>
+          </div>
+        </form>
       </div>
+
+      <style>{`
+        @keyframes slide-in {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.25s ease-out;
+        }
+      `}</style>
     </>
   )
 }
