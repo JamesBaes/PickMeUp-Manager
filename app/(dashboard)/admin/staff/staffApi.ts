@@ -1,10 +1,28 @@
 'use server'
 
-import { createClient } from "@/utils/server";
+import { createAdminClient, createClient } from "@/utils/server";
 
-export const fetchStaff = async () => { 
+const getAdminContext = async () => {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized', restaurantId: null, role: null }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, restaurant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    return { error: 'Forbidden', restaurantId: null, role: null }
+  }
+
+  return { error: null, restaurantId: profile.restaurant_id, role: profile.role }
+}
+
+export const fetchStaff = async () => {
+  const admin = await createAdminClient()
+  const { data, error } = await admin
     .from('profiles')
     .select('id, name, email, role, restaurant_id')
     .eq('role', 'staff')
@@ -17,31 +35,62 @@ export const fetchStaff = async () => {
 }
 
 export const addStaff = async (name: string, email: string) => {
-  const res = await fetch('/api/staff', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email}),
-  })
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }))
-    console.error(`Error adding staff [${res.status}]:`, err)
+  const { error, restaurantId } = await getAdminContext()
+  if (error || !restaurantId) {
+    console.error('Auth error:', error)
     return null
   }
 
-  return res.json()
+  const admin = await createAdminClient()
+
+  const { data: authData, error: authError } = await admin.auth.admin.inviteUserByEmail(email)
+  if (authError) {
+    console.error('Invite error:', authError)
+    return null
+  }
+
+  const { data, error: upsertError } = await admin
+    .from('profiles')
+    .upsert({ id: authData.user.id, name, email, role: 'staff', restaurant_id: restaurantId })
+    .select()
+    .single()
+
+  if (upsertError) {
+    console.error('Profile upsert error:', upsertError)
+    return null
+  }
+
+  return data
 }
 
 export const deactivateStaff = async (id: string) => {
-  const res = await fetch('/api/staff', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  })
+  const { error, restaurantId, role } = await getAdminContext()
+  if (error || !restaurantId) {
+    console.error('Auth error:', error)
+    return false
+  }
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }))
-    console.error(`Error deactivating staff [${res.status}]:`, err)
+  const admin = await createAdminClient()
+
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('restaurant_id')
+    .eq('id', id)
+    .single()
+
+  if (!profile) {
+    console.error('Staff member not found')
+    return false
+  }
+
+  if (profile.restaurant_id !== restaurantId && role !== 'super_admin') {
+    console.error('Forbidden')
+    return false
+  }
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(id)
+  if (deleteError) {
+    console.error('Delete user error:', deleteError)
     return false
   }
 

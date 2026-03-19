@@ -33,25 +33,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "restaurant_id is required" }, { status: 400 })
   }
 
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email)
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    data: {
+      name,
+      role: "staff",
+      restaurant_id: targetRestaurantId,
+    },
+  })
 
   if (authError) {
     console.error("Auth error:", authError)
     return NextResponse.json({ error: authError.message }, { status: 400 })
   }
 
-  const { data, error: insertError } = await supabaseAdmin
-    .from("profiles")
-    .insert([{ id: authData.user.id, name, email, role: "staff", restaurant_id: targetRestaurantId }])
-    .select()
-    .single()
-
-  if (insertError) {
-    console.error("Profile insert error:", insertError)
-    return NextResponse.json({ error: insertError.message }, { status: 400 })
-  }
-
-  return NextResponse.json(data)
+  // Profile is created by the handle_new_user trigger using raw_user_meta_data
+  return NextResponse.json(authData.user)
 }
 
 export async function DELETE(req: NextRequest) {
