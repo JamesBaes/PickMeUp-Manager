@@ -16,7 +16,7 @@ interface OrdersContextValue {
   queue: Order[]
   currentNotification: Order | null
   liveOrders: Order[]
-  acceptOrder: (id: string) => Promise<void>
+  acceptOrder: (id: string, pickupTime?: string) => Promise<void>
   rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
   refundOrder: (id: string, reason: string, staffName: string) => Promise<void>
@@ -88,7 +88,7 @@ export function OrdersProvider({
             return
           }
 
-          if ((['completed', 'rejected', 'refunded'] as OrderStatus[]).includes(order.status as OrderStatus)) {
+          if ((['completed', 'refunded'] as OrderStatus[]).includes(order.status as OrderStatus)) {
             setLiveOrders((prev) => prev.filter((o) => o.id !== order.id))
             setQueue((prev) => prev.filter((o) => o.id !== order.id))
             return
@@ -104,12 +104,12 @@ export function OrdersProvider({
     return () => { supabase.removeChannel(channel) }
   }, [restaurantId])
 
-  const acceptOrder = useCallback(async (id: string) => {
+  const acceptOrder = useCallback(async (id: string, pickupTime?: string) => {
     setQueue((prev) => prev.filter((o) => o.id !== id))
     const order = queueRef.current.find((o) => o.id === id)
     if (order) setLiveOrders((prev) => [...prev, { ...order, status: 'in_progress' as OrderStatus }])
 
-    const { error } = await acceptOrderAction(id)
+    const { error } = await acceptOrderAction(id, pickupTime)
     if (error) console.error('Failed to accept order:', JSON.stringify(error))
   }, [])
 

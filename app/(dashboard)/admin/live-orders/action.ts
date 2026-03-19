@@ -3,15 +3,19 @@
 import { OrderStatus } from "@/types";
 import { createClient } from "@/utils/server";
 
-export const acceptOrder = async (orderId: number | string) => {
+export const acceptOrder = async (orderId: string, pickupTime?: string) => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('orders')
-    .update({ status: 'in_progress' })
+    .update({ 
+      status: 'in_progress',
+      ...(pickupTime ? { pickup_time: pickupTime } : {})
+    })
     .eq('id', orderId)
 
   return { data, error }
 }
+
 export const adjustOrderStatus = async (orderId: string, status: OrderStatus) => {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -22,12 +26,14 @@ export const adjustOrderStatus = async (orderId: string, status: OrderStatus) =>
   return { data, error }
 }
 
-export const adjustOrderWaitTime = async (orderId: string, suggestedTime: number) => {
+export const adjustOrderWaitTime = async (orderId: string, pickupTime: string) => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('orders')
-    .update({ suggested_time: suggestedTime })
+    .update({ pickup_time: pickupTime })
     .eq('id', orderId)
 
   return { data, error }
 }
+
+
