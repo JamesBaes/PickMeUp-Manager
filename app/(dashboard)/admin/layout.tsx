@@ -30,7 +30,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
             </div>
           </aside>
 
-          <main className="flex-1 overflow-y-auto py-10 px-8 md:px-12 lg:px-64 space-y-6">
+          <main className="flex-1 overflow-y-auto py-10 md:px-12 lg:px-64 space-y-6">
             <PageTabs />
             {children}
           </main>

@@ -1,11 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import supabase from '@/utils/client'
-import { acceptOrder as acceptOrderAction, adjustOrderStatus } from '@/app/(dashboard)/admin/live-orders/action'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useOrdersRealtime } from '@/hooks/useOrdersRealtime'
+import { useOrderActions } from '@/hooks/useOrderActions'
 import type { Order, OrderStatus } from '@/types'
-
-const ACTIVE_STATUSES: OrderStatus[] = ['paid', 'in_progress', 'ready']
 
 interface ToastMessage {
   message: string
@@ -49,118 +47,26 @@ export function OrdersProvider({
       (['in_progress', 'ready'] as OrderStatus[]).includes(o.status as OrderStatus)
     )
   )
-  const queueRef = useRef<Order[]>([])
 
-  useEffect(() => {
-    queueRef.current = queue
-  }, [queue])
+  const { acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast, syncQueueRef }
+   = useOrderActions(setQueue, setLiveOrders)
 
-  useEffect(() => {
-    if (!restaurantId) return
+  useEffect(() => { syncQueueRef(queue) }, [queue])
 
-    const channel = supabase
-      .channel(`orders-${restaurantId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders' },
-        (payload) => {
-          const order = payload.new as Order
-          if (order.restaurant_id !== restaurantId) return
-          if (order.status === 'paid') {
-            setQueue((prev) => [...prev, order])
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
-        (payload) => {
-          const order = payload.new as Order
-          if (order.restaurant_id !== restaurantId) return
-
-          if (order.status === 'in_progress') {
-            setQueue((prev) => prev.filter((o) => o.id !== order.id))
-            setLiveOrders((prev) => {
-              const exists = prev.find((o) => o.id === order.id)
-              if (exists) return prev.map((o) => o.id === order.id ? order : o)
-              return [...prev, order]
-            })
-            return
-          }
-
-          if ((['completed', 'refunded'] as OrderStatus[]).includes(order.status as OrderStatus)) {
-            setLiveOrders((prev) => prev.filter((o) => o.id !== order.id))
-            setQueue((prev) => prev.filter((o) => o.id !== order.id))
-            return
-          }
-
-          setLiveOrders((prev) =>
-            prev.map((o) => (o.id === order.id ? order : o))
-          )
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [restaurantId])
-
-  const acceptOrder = useCallback(async (id: string, pickupTime?: string) => {
-    setQueue((prev) => prev.filter((o) => o.id !== id))
-    const order = queueRef.current.find((o) => o.id === id)
-    if (order) setLiveOrders((prev) => [...prev, { ...order, status: 'in_progress' as OrderStatus }])
-
-    const { error } = await acceptOrderAction(id, pickupTime)
-    if (error) console.error('Failed to accept order:', JSON.stringify(error))
-  }, [])
-
-  const rejectOrder = useCallback(async (id: string) => {
-    setQueue((prev) => prev.filter((o) => o.id !== id))
-
-    const { error } = await adjustOrderStatus(id, 'rejected' as OrderStatus)
-    if (error) console.error('Failed to reject order:', error)
-  }, [])
-
-  const [toast, setToast] = useState<ToastMessage | null>(null)
-  const clearToast = useCallback(() => setToast(null), [])
-
-  const refundOrder = useCallback(async (id: string, reason: string, staffName: string) => {
-    try {
-      const res = await fetch('/api/refund', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: id, reason, staffName }),
-      })
-      if (res.ok) {
-        setLiveOrders((prev) => prev.filter((o) => o.id !== id))
-        setToast({ message: 'Refund issued successfully', type: 'success' })
-      } else {
-        const body = await res.json().catch(() => ({}))
-        console.error('Refund failed:', body.error ?? res.statusText)
-        setToast({ message: body.error ?? 'Refund failed', type: 'error' })
-      }
-    } catch (err) {
-      console.error('Refund request threw:', err)
-      setToast({ message: 'Refund failed — network error', type: 'error' })
-    }
-  }, [])
-
-  const updateStatus = useCallback(async (id: string, status: OrderStatus) => {
-    if ((['completed', 'rejected'] as OrderStatus[]).includes(status)) {
-      setLiveOrders((prev) => prev.filter((o) => o.id !== id))
-    } else {
-      setLiveOrders((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, status } : o))
-      )
-    }
-
-    const { error } = await adjustOrderStatus(id, status)
-    if (error) console.error('Failed to update order status:', error)
-  }, [])
-
-  const currentNotification = queue[0] ?? null
+  useOrdersRealtime(restaurantId, setQueue, setLiveOrders)
 
   return (
-    <OrdersContext.Provider value={{ queue, currentNotification, liveOrders, acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast }}>
+    <OrdersContext.Provider value={{
+      queue,
+      currentNotification: queue[0] ?? null,
+      liveOrders,
+      acceptOrder,
+      rejectOrder,
+      updateStatus,
+      refundOrder,
+      toast,
+      clearToast,
+    }}>
       {children}
     </OrdersContext.Provider>
   )
