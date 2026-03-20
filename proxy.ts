@@ -23,6 +23,7 @@ export async function proxy(request: NextRequest) {
     supabaseUrl,
     supabaseKey,
     {
+      cookieOptions: { name: 'restaurant' },
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -52,7 +53,7 @@ export async function proxy(request: NextRequest) {
     
   const adminOnlyRoutes = ['/admin/staff', '/admin/menu/add', '/admin/menu/edit']
   const protectedRoutes = ["/admin", "/super_admin"]
-  const publicRoutes = ['/', '/forgot-password', '/reset-password']
+  const publicRoutes = ['/', '/forgot-password', '/reset-password', '/api/signout']
   const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
   const isPublicRoute = publicRoutes.includes(path)
   const isAdminOnlyRoute = adminOnlyRoutes.some((route) => path.startsWith(route))
@@ -63,6 +64,11 @@ export async function proxy(request: NextRequest) {
 
   // unauthenticated users get redirected back to login
   if (!user && isProtectedRoute) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // customers (user role) are not allowed in the restaurant app
+  if (user && role === 'user') {
     return NextResponse.redirect(new URL('/', request.url))
   }
 

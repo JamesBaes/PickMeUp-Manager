@@ -15,6 +15,7 @@ export async function createClient() {
     supabaseUrl!,
     supabaseKey!,
     {
+      cookieOptions: { name: 'restaurant' },
       cookies: {
         getAll() {
           return cookieStore.getAll()

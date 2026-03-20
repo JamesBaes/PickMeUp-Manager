@@ -29,13 +29,19 @@ export async function login(email: string, password: string) {
   
   const role = profile?.role;
 
-  if (role === "admin" || "staff") {
-    return { success: true, redirectTo: "/admin" };
-  }
-
   if (role === "super_admin") {
     return { success: true, redirectTo: "/super_admin" };
   }
 
-  return { error: "An error occurred. Please try again." };
+  if (role === "admin") {
+    return { success: true, redirectTo: "/admin" };
+  }
+
+  if (role === "staff") {
+    return { success: true, redirectTo: "/admin" };
+  }
+
+  // Customer or unknown role — not allowed here
+  await supabase.auth.signOut();
+  return { error: "Access denied. This portal is for restaurant staff only." };
 }
