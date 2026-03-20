@@ -1,6 +1,9 @@
 import React from 'react'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
+const formatLabel = (str: string) =>
+  str.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
 interface MenuListProps {
   menuItems: MenuItem[]
   isAdmin: boolean
@@ -35,7 +38,7 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
               <tr key={item.item_id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
                 <td className="py-4 px-4 md:px-6">
                   <div>
-                    <p className="text-sm font-semibold">{item.name}</p>
+                    <p className="text-sm font-semibold">{formatLabel(item.name)}</p>
                     {item.description && (
                       <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{item.description}</p>
                     )}
