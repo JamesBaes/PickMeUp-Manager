@@ -9,6 +9,12 @@ interface MenuListProps {
   onDelete: (id: number) => void
 }
 
+function formatLabel(value: string): string {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onEdit, onDelete }) => {
   return (
     <div className="bg-white rounded-xl shadow overflow-x-auto">
@@ -35,22 +41,26 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
               <tr key={item.item_id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
                 <td className="py-4 px-4 md:px-6">
                   <div>
-                    <p className="text-sm font-semibold">{item.name}</p>
+                    <p className="text-sm font-semibold">{formatLabel(item.name)}</p>
                     {item.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{item.description}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 max-w-xs">{item.description}</p>
                     )}
                   </div>
                 </td>
                 <td className="py-4 px-4 md:px-6">
-                  <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
-                    {item.category}
+                  <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full whitespace-nowrap">
+                    {formatLabel(item.category)}
                   </span>
                 </td>
-                <td className="py-4 px-4 md:px-6 text-sm text-gray-700 font-medium">
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-700 font-medium whitespace-nowrap">
                   ${item.price.toFixed(2)}
                 </td>
-                <td className="py-4 px-4 md:px-6 text-sm text-gray-600">{item.calories} kcal</td>
-                <td className="py-4 px-4 md:px-6 text-sm text-gray-500 max-w-xs truncate">{item.allergy_information}</td>
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-600 whitespace-nowrap">
+                  {item.calories ? `${item.calories} kcal` : '—'}
+                </td>
+                <td className="py-4 px-4 md:px-6 text-sm text-gray-500 max-w-xs">
+                  {item.allergy_information || <span className="text-gray-300">None</span>}
+                </td>
                 {isAdmin && (
                   <td className="py-4 px-4 md:px-6 text-right">
                     <div className="flex items-center justify-end gap-2">

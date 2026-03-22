@@ -10,7 +10,23 @@ interface MenuFormProps {
   initialData?: MenuItem
   onClose: () => void
   onSubmit: (data: FormData) => Promise<void>
+  error?: string | null
 }
+
+const CATEGORIES = [
+  'beef_burgers',
+  'chicken_burgers',
+  'steak_sandwiches',
+  'burgers',
+  'combos',
+  'crowds_sides',
+  'extra_armour_sides',
+  'treats',
+  'milkshakes',
+  'juice',
+  'soda_and_water',
+  'beverages',
+]
 
 const empty: FormData = {
   name: '',
@@ -21,7 +37,7 @@ const empty: FormData = {
   allergy_information: '',
 }
 
-const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit }) => {
+const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit, error }) => {
   const [form, setForm] = useState<FormData>(
     initialData
       ? {
@@ -51,7 +67,7 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
     )
   }, [initialData])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
@@ -126,14 +142,20 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
 
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
-            <input
-              type="text"
+            <select
               name="category"
               value={form.category}
               onChange={handleChange}
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+            >
+              <option value="" disabled>Select a category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -159,6 +181,10 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
               className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             />
           </div>
+
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+          )}
 
           <div className="mt-auto flex gap-2 pt-2">
             <button

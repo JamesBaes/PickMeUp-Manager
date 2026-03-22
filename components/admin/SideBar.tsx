@@ -1,12 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '../LogoutButton'
 import Image from 'next/image'
 import { LayoutDashboard, Zap, History, UtensilsCrossed, Users } from 'lucide-react'
 import { useRestaurant } from '@/context/RestaurantContext'
+import supabase from '@/utils/client'
 
 const allPageLinks = [
   { page: "Dashboard", route: "/admin", icon: LayoutDashboard, adminOnly: false },
@@ -19,15 +20,30 @@ const allPageLinks = [
 const SideBar = () => {
   const pathname = usePathname()
   const { isAdmin } = useRestaurant()
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null))
+  }, [])
 
   const pageLinks = allPageLinks.filter((p) => !p.adminOnly || isAdmin)
 
   return (
     <nav className='flex flex-col w-full h-screen bg-white border-r border-gray-100 shadow-sm items-center py-4 gap-2'>
-      <div className="relative group flex items-center justify-center mb-6">
+      <div className="relative group flex flex-col items-center justify-center mb-6 gap-1">
         <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center">
           <Image src="/circle-logo.png" alt="Pick Me Up Logo" width={56} height={56} />
         </div>
+        {email && (
+          <div className="relative group/email w-full flex justify-center">
+            <span className="text-[9px] text-gray-400 truncate max-w-[72px] text-center leading-tight cursor-default">
+              {email.split('@')[0]}
+            </span>
+            <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/email:opacity-100 transition whitespace-nowrap z-50">
+              {email}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-6 w-full px-2 items-center pt-2 flex-1">
