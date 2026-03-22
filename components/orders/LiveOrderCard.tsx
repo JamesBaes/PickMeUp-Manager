@@ -4,8 +4,15 @@ import { useState } from "react";
 import { useOrders } from "@/context/OrdersContext";
 import type { Order, OrderStatus } from "@/types";
 
+function toTitleCase(str: string) {
+  return str
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function LiveOrderCard({ order }: { order: Order }) {
   const { updateStatus, refundOrder } = useOrders();
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const total = (order.total_cents / 100).toFixed(2);
   const pickupTime = order.pickup_time
     ? new Date(order.pickup_time).toLocaleTimeString("en-US", {
@@ -14,12 +21,23 @@ export default function LiveOrderCard({ order }: { order: Order }) {
       })
     : null;
 
+  const isChecklist = order.status === "in_progress";
+  const allChecked = isChecklist && order.items.every((item) => checked.has(item.name));
+
+  function toggleItem(name: string) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
       <div className="flex justify-between items-start">
         <div>
           <p className="text-base font-semibold text-gray-900">
-            {order.customer_name}
+            {toTitleCase(order.customer_name)}
           </p>
           <p className="text-sm text-gray-400">{order.customer_phone}</p>
         </div>
@@ -27,12 +45,37 @@ export default function LiveOrderCard({ order }: { order: Order }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        {order.items.map((item) => (
-          <div key={item.name} className="flex justify-between text-sm">
-            <span className="text-gray-600">{item.name}</span>
-            <span className="text-gray-400">x{item.qty}</span>
-          </div>
-        ))}
+        {order.items.map((item) => {
+          const isItemChecked = checked.has(item.name);
+          const qty = item.qty ?? item.quantity ?? 1;
+          return (
+            <div
+              key={item.name}
+              className={`flex items-center justify-between text-sm gap-2 ${isChecklist ? "cursor-pointer select-none" : ""}`}
+              onClick={isChecklist ? () => toggleItem(item.name) : undefined}
+            >
+              {isChecklist && (
+                <span
+                  className={`flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                    isItemChecked
+                      ? "bg-green-500 border-green-500"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  {isItemChecked && (
+                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+              )}
+              <span className={`flex-1 ${isItemChecked ? "line-through text-gray-400" : "text-gray-700"}`}>
+                {toTitleCase(item.name)}
+              </span>
+              <span className="text-gray-400 text-xs font-medium">x{qty}</span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-2">
@@ -43,6 +86,7 @@ export default function LiveOrderCard({ order }: { order: Order }) {
       <ActionButton
         order={order}
         total={total}
+        allChecked={allChecked}
         updateStatus={updateStatus}
         refundOrder={refundOrder}
       />
@@ -53,11 +97,13 @@ export default function LiveOrderCard({ order }: { order: Order }) {
 function ActionButton({
   order,
   total,
+  allChecked,
   updateStatus,
   refundOrder,
 }: {
   order: Order;
   total: string;
+  allChecked: boolean;
   updateStatus: (id: string, status: OrderStatus) => Promise<void>;
   refundOrder: (id: string, reason: string, staffName: string) => Promise<void>;
 }) {
@@ -125,7 +171,8 @@ function ActionButton({
       <div className="flex flex-col gap-2">
         <button
           onClick={() => updateStatus(order.id, "ready")}
-          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
+          disabled={!allChecked}
+          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         >
           Ready
         </button>

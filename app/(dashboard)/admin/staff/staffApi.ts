@@ -47,7 +47,7 @@ export const addStaff = async (name: string, email: string) => {
     return null
   }
 
-  const { data, error: upsertError } = await supabase
+  const { data, error: upsertError } = await createAdminClient()
     .from('profiles')
     .upsert({ id: authData.user.id, name, email, role: 'staff', restaurant_id: restaurantId })
     .select()

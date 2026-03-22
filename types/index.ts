@@ -2,7 +2,8 @@ export type OrderStatus = 'paid' | 'in_progress' | 'ready' | 'completed' | 'refu
  
 export interface OrderItem {
   name: string
-  qty: number
+  qty?: number
+  quantity?: number
   price_cents?: number
 }
  

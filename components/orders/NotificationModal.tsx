@@ -3,6 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useOrders } from "@/context/OrdersContext";
 
+function toTitleCase(str: string) {
+  return str
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function NotificationModal() {
   const router = useRouter();
   const { currentNotification, queue, acceptOrder, rejectOrder } = useOrders();
@@ -28,7 +34,7 @@ export default function NotificationModal() {
             New Order
           </p>
           <p className="text-white text-xl font-semibold mt-0.5">
-            {order.customer_name}
+            {toTitleCase(order.customer_name)}
           </p>
           <p className="text-blue-200 text-sm">{order.customer_phone}</p>
         </div>
@@ -40,9 +46,9 @@ export default function NotificationModal() {
               key={item.name}
               className="flex justify-between items-center py-1"
             >
-              <span className="text-sm text-gray-700">{item.name}</span>
+              <span className="text-sm text-gray-700">{toTitleCase(item.name)}</span>
               <span className="text-sm font-medium text-gray-900">
-                x{item.qty}
+                x{item.qty ?? item.quantity ?? 1}
               </span>
             </div>
           ))}

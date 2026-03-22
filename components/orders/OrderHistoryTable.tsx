@@ -100,6 +100,7 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Order ID</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Created</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Customer</th>
+            <th className="pb-3 text-left text-xs font-semibold text-gray-400">Email</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Total</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Status</th>
           </tr>
@@ -107,7 +108,7 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
         <tbody className="divide-y divide-gray-50">
           {paginated.length === 0 ? (
             <tr>
-              <td colSpan={6} className="py-12 text-center text-sm text-gray-400">
+              <td colSpan={7} className="py-12 text-center text-sm text-gray-400">
                 No orders found
               </td>
             </tr>
@@ -130,6 +131,9 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
                 </td>
                 <td className="py-3 pr-6">
                   <span className="text-sm text-gray-700">{order.customer_name}</span>
+                </td>
+                <td className="py-3 pr-6">
+                  <span className="text-sm text-gray-500">{order.customer_email ?? '—'}</span>
                 </td>
                 <td className="py-3 pr-6">
                   <span className="text-sm text-gray-700">${(order.total_cents / 100).toFixed(2)}</span>
