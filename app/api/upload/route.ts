@@ -1,23 +1,24 @@
-import { createAdminClient, createClient } from '@/utils/server'
+import { createClient } from '@/utils/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 const ALLOWED_ROLES = ['admin', 'super_admin']
 
 export async function POST(req: NextRequest) {
-  const supabaseAuth = await createClient()
-  const { data: { user } } = await supabaseAuth.auth.getUser()
+  const supabase = await createClient()
 
-  if (!user) {
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: profile } = await supabaseAuth
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const jwtPayload = JSON.parse(
+    Buffer.from(session.access_token.split('.')[1], 'base64url').toString()
+  )
 
-  if (!ALLOWED_ROLES.includes(profile?.role)) {
+  const appRole: string = jwtPayload?.app_metadata?.app_role ?? 'user'
+
+  if (!ALLOWED_ROLES.includes(appRole)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -29,13 +30,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing file or path' }, { status: 400 })
   }
 
-  const supabase = createAdminClient()
   const { error } = await supabase.storage
     .from('menu-images')
     .upload(path, file, { upsert: true })
 
   if (error) {
-    console.error('[API/upload] Error:', error)
+    console.error('[API/upload] Storage error:', error)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
