@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRestaurant } from '@/context/RestaurantContext'
-import { getAllMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from './menu'
+import { getAllMenuItems, createMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemVisibility } from './menu'
 import type { MenuItem } from './menu'
 import MenuList from '@/components/menu/menuList'
 import MenuForm from '@/components/menu/menuForm'
+
+type SortKey = 'name' | 'category' | 'price'
+type SortDir = 'asc' | 'desc'
+
+const SORT_LABELS: Record<SortKey, string> = { name: 'Name', category: 'Category', price: 'Price' }
 
 const MenuPage = () => {
   const { isAdmin } = useRestaurant()
@@ -15,6 +20,24 @@ const MenuPage = () => {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const sortedItems = sortKey
+    ? [...menuItems].sort((a, b) => {
+        const cmp = sortKey === 'price' ? a.price - b.price : a[sortKey].localeCompare(b[sortKey])
+        return sortDir === 'asc' ? cmp : -cmp
+      })
+    : menuItems
 
   const loadItems = async () => {
     const result = await getAllMenuItems()
@@ -56,6 +79,13 @@ const MenuPage = () => {
     setDeletingId(null)
   }
 
+  const handleToggleHide = async (id: number, isHidden: boolean) => {
+    const result = await toggleMenuItemVisibility(id, isHidden)
+    if (result.success) {
+      setMenuItems((prev) => prev.map((i) => i.item_id === id ? { ...i, is_hidden: isHidden } : i))
+    }
+  }
+
   const openEdit = (item: MenuItem) => {
     setEditingItem(item)
     setShowSidebar(true)
@@ -75,24 +105,46 @@ const MenuPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">Menu</h1>
         {isAdmin && (
-          <button
-            onClick={() => { setEditingItem(null); setShowSidebar(true) }}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition w-full sm:w-auto"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            Add Item
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
+              <span className="text-xs text-gray-400 mr-1">Sort:</span>
+              {(['name', 'category', 'price'] as SortKey[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => handleSort(key)}
+                  className={`text-xs px-2.5 py-1 rounded-md transition flex items-center gap-0.5 ${
+                    sortKey === key
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  {SORT_LABELS[key]}
+                  {sortKey === key && (
+                    <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setEditingItem(null); setShowSidebar(true) }}
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Add Item
+            </button>
+          </div>
         )}
       </div>
 
       <MenuList
-        menuItems={menuItems}
+        menuItems={sortedItems}
         isAdmin={isAdmin}
         deletingId={deletingId}
         onEdit={openEdit}
         onDelete={handleDelete}
+        onToggleHide={handleToggleHide}
       />
 
       {showSidebar && (

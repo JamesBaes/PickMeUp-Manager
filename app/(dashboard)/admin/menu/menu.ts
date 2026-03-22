@@ -11,6 +11,7 @@ export interface MenuItem {
   category: string
   calories: number
   allergy_information: string
+  is_hidden?: boolean
   created_at?: string
   updated_at?: string
 }
@@ -111,6 +112,24 @@ export async function updateMenuItem(input: UpdateMenuItemInput): Promise<{ succ
   }
 
   return { success: true, data }
+}
+
+export async function toggleMenuItemVisibility(itemId: number, isHidden: boolean): Promise<{ success: boolean; error?: string }> {
+  const { error: authError, restaurantId, supabase } = await getAdminContext()
+  if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
+
+  const { error } = await supabase
+    .from('menu_items_restaurant_locations')
+    .update({ is_hidden: isHidden })
+    .eq('item_id', itemId)
+    .eq('restaurant_id', restaurantId)
+
+  if (error) {
+    console.error('toggleMenuItemVisibility error:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }
 
 export async function deleteMenuItem(itemId: number): Promise<{ success: boolean; error?: string }> {

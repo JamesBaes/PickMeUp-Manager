@@ -89,32 +89,39 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
         className="fixed inset-0 bg-black bg-opacity-30 z-40"
         onClick={onClose}
       />
-      <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">{mode === 'edit' ? 'Edit Item' : 'Add Menu Item'}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+      <div className="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
+        {/* Green accent bar matching sidebar */}
+        <div className="h-1 w-full bg-green-500" />
+
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">{mode === 'edit' ? 'Edit Item' : 'Add Menu Item'}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{mode === 'edit' ? 'Update the details below' : 'Fill in the details to add a new item'}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
               <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto p-6 gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto px-8 py-6 gap-5">
           <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Name</label>
             <input
               type="text"
               name="name"
               value={form.name}
               onChange={handleChange}
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="e.g. Classic Beef Burger"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">Price ($)</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-1.5">Price ($)</label>
               <input
                 type="number"
                 name="price"
@@ -123,11 +130,11 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
                 step="0.01"
                 min="0"
                 required
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">Calories</label>
+              <label className="block text-sm font-semibold text-gray-600 mb-1.5">Calories</label>
               <input
                 type="number"
                 name="calories"
@@ -135,19 +142,19 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
                 onChange={handleChange}
                 min="0"
                 required
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Category</label>
             <select
               name="category"
               value={form.category}
               onChange={handleChange}
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-white transition"
             >
               <option value="" disabled>Select a category</option>
               {CATEGORIES.map((cat) => (
@@ -159,45 +166,47 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Description</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
               rows={3}
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="Briefly describe the item..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Allergy Information</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Allergy Information</label>
             <textarea
               name="allergy_information"
               value={form.allergy_information}
               onChange={handleChange}
               rows={2}
               required
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="e.g. Contains gluten, dairy..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">{error}</p>
           )}
 
-          <div className="mt-auto flex gap-2 pt-2">
+          <div className="mt-auto flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              className="flex-1 border border-gray-200 text-sm font-semibold text-gray-600 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition disabled:opacity-50"
             >
               {submitting ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
             </button>
