@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
 type FormData = Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>
@@ -35,50 +36,115 @@ const empty: FormData = {
   category: '',
   calories: 0,
   allergy_information: '',
+  image_url: '',
 }
 
+const toFormData = (item: MenuItem): FormData => ({
+  name: item.name,
+  price: item.price,
+  description: item.description ?? '',
+  category: item.category,
+  calories: item.calories,
+  allergy_information: item.allergy_information ?? '',
+  image_url: item.image_url ?? '',
+})
+
 const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit, error }) => {
-  const [form, setForm] = useState<FormData>(
-    initialData
-      ? {
-          name: initialData.name,
-          price: initialData.price,
-          description: initialData.description,
-          category: initialData.category,
-          calories: initialData.calories,
-          allergy_information: initialData.allergy_information,
-        }
-      : empty
-  )
+  const [form, setForm] = useState<FormData>(initialData ? toFormData(initialData) : empty)
   const [submitting, setSubmitting] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url ?? '')
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setForm(
-      initialData
-        ? {
-            name: initialData.name,
-            price: initialData.price,
-            description: initialData.description,
-            category: initialData.category,
-            calories: initialData.calories,
-            allergy_information: initialData.allergy_information,
-          }
-        : empty
-    )
+    setForm(initialData ? toFormData(initialData) : empty)
+    setImageFile(null)
+    setImagePreview(initialData?.image_url ?? '')
+    setUploadError(null)
   }, [initialData])
+
+  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/avif', 'image/webp']
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setUploadError('Invalid file type. Accepted: JPEG, PNG, AVIF, WEBP.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    if (file.size > MAX_SIZE_BYTES) {
+      setUploadError('Image must be 5 MB or smaller.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+    setUploadError(null)
+  }
+
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview('')
+    setForm((prev) => ({ ...prev, image_url: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const filtered = e.target.value
+      .replace(/[^0-9.]/g, '')
+      .replace(/(\..*)\./g, '$1')
+    setForm((prev) => ({ ...prev, price: filtered as unknown as number }))
+  }
+
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     setSubmitting(true)
+    setUploadError(null)
+
+    let image_url = form.image_url ?? ''
+
+    if (imageFile) {
+      const ext = imageFile.name.split('.').pop()
+      const path = `menu-items/${crypto.randomUUID()}_${Date.now()}.${ext}`
+      console.log('[Upload] Starting upload:', { path, size: imageFile.size, type: imageFile.type })
+      const uploadStart = Date.now()
+
+      const fd = new FormData()
+      fd.append('file', imageFile)
+      fd.append('path', path)
+
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+
+      console.log(`[Upload] Finished in ${Date.now() - uploadStart}ms`, json)
+
+      if (!res.ok) {
+        console.error('[Upload] Full error:', json)
+        setUploadError('Image upload failed: ' + json.error)
+        setSubmitting(false)
+        return
+      }
+
+      image_url = json.publicUrl
+    }
     await onSubmit({
       ...form,
       price: parseFloat(String(form.price)),
       calories: parseInt(String(form.calories)),
+      image_url,
+      description: form.description?.trim() || null,
+      allergy_information: form.allergy_information?.trim() || null,
     })
     setSubmitting(false)
   }
@@ -115,6 +181,7 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
               onChange={handleChange}
               required
               placeholder="e.g. Classic Beef Burger"
+              maxLength={30}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
             />
           </div>
@@ -123,12 +190,12 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-600 mb-1.5">Price ($)</label>
               <input
-                type="number"
+                type="text"
                 name="price"
                 value={form.price}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
+                onChange={handlePriceChange}
+                maxLength={6}
+                inputMode="decimal"
                 required
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
@@ -136,11 +203,11 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-600 mb-1.5">Calories</label>
               <input
-                type="number"
+                type="text"
                 name="calories"
                 value={form.calories}
                 onChange={handleChange}
-                min="0"
+                maxLength={15}
                 required
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
@@ -172,10 +239,13 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
               value={form.description}
               onChange={handleChange}
               rows={3}
-              required
+              maxLength={400}
               placeholder="Briefly describe the item..."
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
+            <p className={`text-xs text-right mt-1 ${form.description.length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {form.description.length}/400
+            </p>
           </div>
 
           <div>
@@ -185,10 +255,54 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
               value={form.allergy_information}
               onChange={handleChange}
               rows={2}
-              required
+              maxLength={400}
               placeholder="e.g. Contains gluten, dairy..."
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
+            <p className={`text-xs text-right mt-1 ${form.allergy_information.length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {form.allergy_information.length}/400
+            </p>
+          </div>
+
+          {/* Image upload */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Item Image</label>
+            {imagePreview ? (
+              <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 mb-2">
+                <Image src={imagePreview} alt="Preview" fill className="object-cover" unoptimized />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-white border border-gray-200 text-gray-500 hover:text-red-500 rounded-full p-1 shadow transition"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-1 w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-green-400 hover:bg-green-50 transition"
+              >
+                <svg className="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24">
+                  <path d="M4 16l4-4 4 4 4-6 4 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                <span className="text-xs text-gray-400">Click to upload image</span>
+                <span className="text-xs text-gray-300">JPEG, PNG, AVIF, WEBP — max 5 MB</span>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.avif,.webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {uploadError && (
+              <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+            )}
           </div>
 
           {error && (

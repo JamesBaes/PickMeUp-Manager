@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Image from 'next/image'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
 const formatLabel = (str: string) =>
@@ -47,9 +48,19 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
   return (
     <>
     <div className="bg-white rounded-xl shadow overflow-x-auto">
-      <table className="min-w-full">
+      <table className="min-w-full table-fixed">
+        <colgroup>
+          <col className="w-20" />
+          <col className="w-44" />
+          <col className="w-44" />
+          <col className="w-24" />
+          <col className="w-28" />
+          <col />
+          {isAdmin && <col className="w-44" />}
+        </colgroup>
         <thead>
           <tr className="border-b border-gray-100">
+            <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Image</th>
             <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Name</th>
             <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Category</th>
             <th className="py-4 px-4 md:px-6 text-left text-sm font-semibold text-gray-500">Price</th>
@@ -61,7 +72,7 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
         <tbody>
           {menuItems.length === 0 ? (
             <tr>
-              <td colSpan={isAdmin ? 6 : 5} className="py-12 text-center text-sm text-gray-400">
+              <td colSpan={isAdmin ? 7 : 6} className="py-12 text-center text-sm text-gray-400">
                 No menu items yet
               </td>
             </tr>
@@ -69,12 +80,21 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
             menuItems.map((item) => (
               <tr key={item.item_id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
                 <td className="py-4 px-4 md:px-6">
-                  <div>
-                    <p className="text-sm font-semibold">{formatLabel(item.name)}</p>
-                    {item.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 max-w-xs">{item.description}</p>
-                    )}
-                  </div>
+                  {item.image_url ? (
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
+                      <Image src={item.image_url} alt={item.name} fill className="object-cover" unoptimized />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24">
+                        <path d="M4 16l4-4 4 4 4-6 4 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
+                      </svg>
+                    </div>
+                  )}
+                </td>
+                <td className="py-4 px-4 md:px-6 text-sm font-semibold">
+                  {formatLabel(item.name)}
                 </td>
                 <td className="py-4 px-4 md:px-6">
                   <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap w-36 text-center ${getCategoryColor(item.category)}`}>
