@@ -1,8 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
 const formatLabel = (str: string) =>
   str.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
+const CATEGORY_COLORS: Record<string, string> = {
+  beef_burgers:        'bg-red-100 text-red-700',
+  chicken_burgers:     'bg-orange-100 text-orange-700',
+  steak_sandwiches:    'bg-amber-100 text-amber-700',
+  burgers:             'bg-yellow-100 text-yellow-700',
+  combos:              'bg-lime-100 text-lime-700',
+  crowds_sides:        'bg-green-100 text-green-700',
+  extra_armour_sides:  'bg-teal-100 text-teal-700',
+  treats:              'bg-pink-100 text-pink-700',
+  milkshakes:          'bg-purple-100 text-purple-700',
+  juice:               'bg-cyan-100 text-cyan-700',
+  soda_and_water:      'bg-sky-100 text-sky-700',
+  beverages:           'bg-blue-100 text-blue-700',
+}
+
+const getCategoryColor = (category: string) =>
+  CATEGORY_COLORS[category] ?? 'bg-gray-100 text-gray-600'
 
 interface MenuListProps {
   menuItems: MenuItem[]
@@ -10,16 +28,24 @@ interface MenuListProps {
   deletingId: number | null
   onEdit: (item: MenuItem) => void
   onDelete: (id: number) => void
+  onToggleHide: (id: number, isHidden: boolean) => void
 }
 
-function formatLabel(value: string): string {
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
 
-const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onEdit, onDelete }) => {
+const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onEdit, onDelete, onToggleHide }) => {
+  const [confirmItem, setConfirmItem] = useState<MenuItem | null>(null)
+
+  const handleDeleteClick = (item: MenuItem) => setConfirmItem(item)
+
+  const handleConfirm = () => {
+    if (confirmItem) {
+      onDelete(confirmItem.item_id)
+      setConfirmItem(null)
+    }
+  }
+
   return (
+    <>
     <div className="bg-white rounded-xl shadow overflow-x-auto">
       <table className="min-w-full">
         <thead>
@@ -51,7 +77,7 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
                   </div>
                 </td>
                 <td className="py-4 px-4 md:px-6">
-                  <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full whitespace-nowrap">
+                  <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap w-36 text-center ${getCategoryColor(item.category)}`}>
                     {formatLabel(item.category)}
                   </span>
                 </td>
@@ -74,7 +100,17 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
                         Edit
                       </button>
                       <button
-                        onClick={() => onDelete(item.item_id)}
+                        onClick={() => onToggleHide(item.item_id, !item.is_hidden)}
+                        className={`text-xs border px-3 py-1.5 rounded-md active:scale-95 transition ${
+                          item.is_hidden
+                            ? 'border-amber-500 text-amber-600 hover:bg-amber-50'
+                            : 'border-gray-400 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {item.is_hidden ? 'Show' : 'Hide'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(item)}
                         disabled={deletingId === item.item_id}
                         className="text-xs border border-red-500 text-red-500 px-3 py-1.5 rounded-md hover:bg-red-50 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -89,6 +125,39 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
         </tbody>
       </table>
     </div>
+
+      {confirmItem && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-4 flex flex-col gap-3 w-full max-w-sm animate-slide-up">
+          <p className="text-sm text-gray-700">
+            Are you sure you want to delete{' '}
+            <span className="font-semibold">{formatLabel(confirmItem.name)}</span>{' '}
+            from your menu?
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setConfirmItem(null)}
+              className="text-xs border border-gray-300 text-gray-600 px-4 py-1.5 rounded-md hover:bg-gray-50 transition"
+            >
+              No
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="text-xs bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md transition"
+            >
+              Yes, delete
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide-up {
+          from { transform: translate(-50%, 20px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slide-up 0.2s ease-out; }
+      `}</style>
+    </>
   )
 }
 
