@@ -1,13 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from '../LogoutButton'
 import Image from 'next/image'
 import { LayoutDashboard, Zap, History, UtensilsCrossed, Users } from 'lucide-react'
 import { useRestaurant } from '@/context/RestaurantContext'
-import { useAuth } from '@/context/AuthContext'
+import supabase from '@/utils/client'
 
 const allPageLinks = [
   { page: "Dashboard", route: "/admin", icon: LayoutDashboard, adminOnly: false },
@@ -19,31 +19,31 @@ const allPageLinks = [
 
 const SideBar = () => {
   const pathname = usePathname()
-  const { isAdmin, role } = useRestaurant()
-  const { user } = useAuth()
-  const emailUsername = user?.email?.split('@')[0] ?? ''
+  const { isAdmin } = useRestaurant()
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null))
+  }, [])
 
   const pageLinks = allPageLinks.filter((p) => !p.adminOnly || isAdmin)
 
   return (
     <nav className='flex flex-col w-full h-screen bg-white border-r border-gray-100 shadow-sm items-center py-4 gap-2'>
-      <div className="flex flex-col items-center gap-1 mb-4">
-        <div className="relative group w-14 h-14 rounded-full overflow-hidden flex items-center justify-center">
+      <div className="relative group flex flex-col items-center justify-center mb-6 gap-1">
+        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center">
           <Image src="/circle-logo.png" alt="Pick Me Up Logo" width={56} height={56} />
         </div>
-        <div className="relative group flex flex-col items-center">
-          <span className="text-[10px] font-semibold text-gray-700 truncate max-w-20 text-center leading-tight">
-            {emailUsername}
-          </span>
-          <span className="text-[9px] text-gray-400 font-medium uppercase tracking-wide">
-            {role}
-          </span>
-          {user?.email && (
-            <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-50">
-              {user.email}
+        {email && (
+          <div className="relative group/email w-full flex justify-center">
+            <span className="text-[9px] text-gray-400 truncate max-w-[72px] text-center leading-tight cursor-default">
+              {email.split('@')[0]}
             </span>
-          )}
-        </div>
+            <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/email:opacity-100 transition whitespace-nowrap z-50">
+              {email}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-6 w-full px-2 items-center pt-2 flex-1">

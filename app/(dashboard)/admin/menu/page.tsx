@@ -14,6 +14,7 @@ const MenuPage = () => {
   const [showSidebar, setShowSidebar] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const loadItems = async () => {
     const result = await getAllMenuItems()
@@ -26,9 +27,14 @@ const MenuPage = () => {
   }, [])
 
   const handleAdd = async (data: Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>) => {
+    setFormError(null)
     const result = await createMenuItem(data)
-    if (result.success) await loadItems()
-    setShowSidebar(false)
+    if (result.success) {
+      await loadItems()
+      setShowSidebar(false)
+    } else {
+      setFormError(result.error ?? 'Failed to add item')
+    }
   }
 
   const handleEdit = async (data: Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>) => {
@@ -58,6 +64,7 @@ const MenuPage = () => {
   const closeForm = () => {
     setShowSidebar(false)
     setEditingItem(null)
+    setFormError(null)
   }
 
   if (loading) return <div className="py-12 text-center text-sm text-gray-400">Loading menu...</div>
@@ -94,6 +101,7 @@ const MenuPage = () => {
           initialData={editingItem ?? undefined}
           onClose={closeForm}
           onSubmit={editingItem ? handleEdit : handleAdd}
+          error={formError}
         />
       )}
     </div>
