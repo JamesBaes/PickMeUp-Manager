@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { login } from "@/app/actions/login";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
@@ -12,8 +11,6 @@ export default function LoginForm({
 }: {
   forgotPasswordLink: string;
 }) {
-  const router = useRouter();
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +28,7 @@ export default function LoginForm({
       if (result?.error) {
         setError(result.error);
       } else if (result?.redirectTo) {
-        router.replace(result.redirectTo);
+        window.location.href = result.redirectTo;
       }
     } catch (err) {
       console.log("Unexpected error during login:", err);

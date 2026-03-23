@@ -7,10 +7,11 @@ export interface MenuItem {
   restaurant_id?: number
   name: string
   price: number
-  description: string
+  description: string | null
   category: string
   calories: number
-  allergy_information: string
+  allergy_information: string | null
+  image_url?: string
   is_hidden?: boolean
   created_at?: string
   updated_at?: string
@@ -19,10 +20,11 @@ export interface MenuItem {
 export interface CreateMenuItemInput {
   name: string
   price: number
-  description: string
+  description: string | null
   category: string
   calories: number
-  allergy_information: string
+  allergy_information: string | null
+  image_url?: string
 }
 
 export interface UpdateMenuItemInput extends Partial<CreateMenuItemInput> {
@@ -61,6 +63,7 @@ export async function createMenuItem(data: CreateMenuItemInput): Promise<{ succe
       category: data.category,
       calories: data.calories,
       allergy_information: data.allergy_information,
+      image_url: data.image_url ?? null,
     })
     .select()
     .single()
