@@ -1,6 +1,9 @@
 import React from 'react'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
+const formatLabel = (str: string) =>
+  str.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
 interface MenuListProps {
   menuItems: MenuItem[]
   isAdmin: boolean
