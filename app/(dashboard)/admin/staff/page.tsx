@@ -37,9 +37,9 @@ const StaffPage = () => {
     if (!form.name || !form.email) return;
 
     // restaurant_id is automatically scoped server-side to the admin's restaurant
-    const newStaff = await addStaff(form.name, form.email);
-    if (newStaff) {
-      setStaff((prev) => [...prev, newStaff]);
+    const result = await addStaff(form.name, form.email);
+    if (result) {
+      setStaff((prev) => [...prev, result]);
     }
 
     setForm({ name: "", email: "" });
@@ -86,7 +86,7 @@ const StaffPage = () => {
                   <td className="py-4 px-4 md:px-6">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 text-base shrink-0">
-                        {member.name[0].toUpperCase()}
+                        {member.name?.[0]?.toUpperCase() ?? "?"}
                       </div>
                       <span className="text-sm font-semibold">{member.name}</span>
                     </div>
