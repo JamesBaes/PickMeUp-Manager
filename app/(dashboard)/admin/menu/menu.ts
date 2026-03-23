@@ -49,6 +49,24 @@ const getAdminContext = async () => {
   return { error: null, restaurantId: profile.restaurant_id as number, supabase }
 }
 
+const getMenuReadContext = async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized', restaurantId: null, supabase: null }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, restaurant_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'super_admin', 'staff'].includes(profile.role)) {
+    return { error: 'Forbidden', restaurantId: null, supabase: null }
+  }
+
+  return { error: null, restaurantId: profile.restaurant_id as number, supabase }
+}
+
 export async function createMenuItem(data: CreateMenuItemInput): Promise<{ success: boolean; data?: MenuItem; error?: string }> {
   const { error: authError, restaurantId, supabase } = await getAdminContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
@@ -77,7 +95,7 @@ export async function createMenuItem(data: CreateMenuItemInput): Promise<{ succe
 }
 
 export async function getAllMenuItems(): Promise<{ success: boolean; data?: MenuItem[]; error?: string }> {
-  const { error: authError, restaurantId, supabase } = await getAdminContext()
+  const { error: authError, restaurantId, supabase } = await getMenuReadContext()
   if (authError || !restaurantId || !supabase) return { success: false, error: authError ?? 'Unauthorized' }
 
   const { data, error } = await supabase
