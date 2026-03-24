@@ -236,15 +236,15 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
             <label className="block text-sm font-semibold text-gray-600 mb-1.5">Description</label>
             <textarea
               name="description"
-              value={form.description}
+              value={form.description ?? ''}
               onChange={handleChange}
               rows={3}
               maxLength={400}
               placeholder="Briefly describe the item..."
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
-            <p className={`text-xs text-right mt-1 ${form.description.length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
-              {form.description.length}/400
+            <p className={`text-xs text-right mt-1 ${(form.description ?? '').length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {(form.description ?? '').length}/400
             </p>
           </div>
 
@@ -252,15 +252,15 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
             <label className="block text-sm font-semibold text-gray-600 mb-1.5">Allergy Information</label>
             <textarea
               name="allergy_information"
-              value={form.allergy_information}
+              value={form.allergy_information ?? ''}
               onChange={handleChange}
               rows={2}
               maxLength={400}
               placeholder="e.g. Contains gluten, dairy..."
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
             />
-            <p className={`text-xs text-right mt-1 ${form.allergy_information.length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
-              {form.allergy_information.length}/400
+            <p className={`text-xs text-right mt-1 ${(form.allergy_information ?? '').length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {(form.allergy_information ?? '').length}/400
             </p>
           </div>
 
