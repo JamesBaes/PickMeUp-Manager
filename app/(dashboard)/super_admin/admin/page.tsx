@@ -21,6 +21,8 @@ const AdminPage = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", restaurant_id: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // State for confirmation modal
+  const [adminToDelete, setAdminToDelete] = useState<Admin | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +36,7 @@ const AdminPage = () => {
     load();
   }, []);
 
+  // Handles actual deletion after confirmation
   const handleDeactivateAdmin = async (id: string) => {
     setDeletingId(id);
     const success = await deactivateAdmin(id);
@@ -41,6 +44,7 @@ const AdminPage = () => {
       setAdmins((prev) => prev.filter((admin) => admin.id !== id));
     }
     setDeletingId(null);
+    setAdminToDelete(null);
   };
 
   const handleAddAdmin = async (e: React.SyntheticEvent) => {
@@ -103,12 +107,41 @@ const AdminPage = () => {
                 <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{admin.email}</td>
                 <td className="py-4 px-4 md:px-6 text-right">
                   <button
-                    onClick={() => handleDeactivateAdmin(admin.id)}
+                    onClick={() => setAdminToDelete(admin)}
                     disabled={deletingId === admin.id}
                     className="text-xs md:text-sm border border-red-500 text-red-500 px-3 md:px-4 py-1.5 rounded-md hover:bg-red-50 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {deletingId === admin.id ? 'Deleting...' : 'Delete Admin'}
                   </button>
+                      {/* Confirmation Modal for Deleting Admin */}
+                      {adminToDelete && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+                            <div className="px-6 py-5 border-b text-center">
+                              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
+                            </div>
+                            <div className="px-6 py-4 text-center">
+                              <p className="mb-4">Are you sure you want to delete <span className="font-bold">{adminToDelete.name}</span>?</p>
+                              <div className="flex justify-center gap-3">
+                                <button
+                                  className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                  onClick={() => setAdminToDelete(null)}
+                                  disabled={deletingId === adminToDelete.id}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                                  onClick={() => handleDeactivateAdmin(adminToDelete.id)}
+                                  disabled={deletingId === adminToDelete.id}
+                                >
+                                  {deletingId === adminToDelete.id ? 'Deleting...' : 'Confirm'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                 </td>
               </tr>
             ))}
