@@ -43,7 +43,7 @@ export default function LiveOrdersPage() {
 
       {/* Orders */}
       {filtered.length === 0 ? (
-        <p className="text-sm text-gray-400 px-1">No orders match this filter.</p>
+        <p className="text-sm text-gray-400 px-1">No orders currently.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((order) => (

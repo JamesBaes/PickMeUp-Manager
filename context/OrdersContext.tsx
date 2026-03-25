@@ -15,7 +15,6 @@ interface OrdersContextValue {
   currentNotification: Order | null
   liveOrders: Order[]
   acceptOrder: (id: string, pickupTime?: string) => Promise<void>
-  rejectOrder: (id: string) => Promise<void>
   updateStatus: (id: string, status: OrderStatus) => Promise<void>
   refundOrder: (id: string, reason: string, staffName: string) => Promise<void>
   toast: ToastMessage | null
@@ -48,7 +47,7 @@ export function OrdersProvider({
     )
   )
 
-  const { acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast, syncQueueRef }
+  const { acceptOrder, updateStatus, refundOrder, toast, clearToast, syncQueueRef }
    = useOrderActions(setQueue, setLiveOrders)
 
   useEffect(() => { syncQueueRef(queue) }, [queue, syncQueueRef])
@@ -61,7 +60,6 @@ export function OrdersProvider({
       currentNotification: queue[0] ?? null,
       liveOrders,
       acceptOrder,
-      rejectOrder,
       updateStatus,
       refundOrder,
       toast,
