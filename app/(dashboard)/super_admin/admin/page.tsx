@@ -153,7 +153,7 @@ const AdminPage = () => {
       {showSidebar && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            className="fixed inset-0 bg-black/30 z-40"
             onClick={() => setShowSidebar(false)}
           />
           <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
