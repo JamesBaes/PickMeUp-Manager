@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { DM_Sans, Nunito } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
-const headingText = DM_Sans({
+const text = DM_Sans({
   variable: "--font-heading",
   subsets: ["latin"],
 });
 
-const bodyText = Nunito({
-  variable: "--font-body",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "PickMeUp Manager",
@@ -27,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${headingText.variable} ${bodyText.variable} antialiased`}
+        className={`${text.variable} antialiased`}
         suppressHydrationWarning
       >
         <AuthProvider>{children}</AuthProvider>

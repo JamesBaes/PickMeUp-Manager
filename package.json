@@ -11,7 +11,9 @@
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
+    "@types/howler": "^2.2.12",
     "chart.js": "^4.5.1",
+    "howler": "^2.2.4",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "posthog-js": "^1.360.1",

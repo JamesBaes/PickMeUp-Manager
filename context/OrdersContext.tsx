@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { Howl } from 'howler'
 import { useOrdersRealtime } from '@/hooks/useOrdersRealtime'
 import { useOrderActions } from '@/hooks/useOrderActions'
 import type { Order, OrderStatus } from '@/types'
@@ -51,6 +52,26 @@ export function OrdersProvider({
    = useOrderActions(setQueue, setLiveOrders)
 
   useEffect(() => { syncQueueRef(queue) }, [queue, syncQueueRef])
+
+  const notificationSound = useRef(new Howl({ src: ['/notification.mp3'], loop: true }))
+
+  // tracks how many orders were in the queue last render
+  const prevQueueLength = useRef(queue.length)
+
+  // plays a looping sound when a new order arrives, stops when the queue is cleared
+  useEffect(() => {
+    const newOrderArrived = queue.length > prevQueueLength.current
+    if (newOrderArrived) {
+      notificationSound.current.play()
+    }
+
+    const queueCleared = queue.length === 0
+    if (queueCleared) {
+      notificationSound.current.stop()
+    }
+
+    prevQueueLength.current = queue.length
+  }, [queue.length])
 
   useOrdersRealtime(restaurantId, setQueue, setLiveOrders)
 
