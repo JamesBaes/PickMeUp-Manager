@@ -81,11 +81,11 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
               <tr key={item.item_id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition">
                 <td className="py-4 px-4 md:px-6">
                   {item.image_url ? (
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0">
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-100 shrink-0">
                       <Image src={item.image_url} alt={item.name} fill className="object-cover" unoptimized />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                       <svg className="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24">
                         <path d="M4 16l4-4 4 4 4-6 4 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
@@ -147,36 +147,31 @@ const MenuList: React.FC<MenuListProps> = ({ menuItems, isAdmin, deletingId, onE
     </div>
 
       {confirmItem && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-4 flex flex-col gap-3 w-full max-w-sm animate-slide-up">
-          <p className="text-sm text-gray-700">
-            Are you sure you want to delete{' '}
-            <span className="font-semibold">{formatLabel(confirmItem.name)}</span>{' '}
-            from your menu?
-          </p>
-          <div className="flex gap-2 justify-end">
-            <button
-              onClick={() => setConfirmItem(null)}
-              className="text-xs border border-gray-300 text-gray-600 px-4 py-1.5 rounded-md hover:bg-gray-50 transition"
-            >
-              No
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="text-xs bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md transition"
-            >
-              Yes, delete
-            </button>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Delete menu item?</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Are you sure you want to delete <span className="font-medium text-gray-700">{formatLabel(confirmItem.name)}</span>? This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmItem(null)}
+                className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+              >
+                Yes, delete
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes slide-up {
-          from { transform: translate(-50%, 20px); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
-        }
-        .animate-slide-up { animation: slide-up 0.2s ease-out; }
-      `}</style>
     </>
   )
 }

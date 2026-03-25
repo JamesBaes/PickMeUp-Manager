@@ -14,6 +14,14 @@ const StaffPage = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [form, setForm] = useState({ name: "", email: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
+
+  useEffect(() => {
+    if (!pendingSubmit) return
+    const t = setTimeout(() => setPendingSubmit(false), 3000)
+    return () => clearTimeout(t)
+  }, [pendingSubmit])
 
   useEffect(() => {
     const loadStaff = async () => {
@@ -99,7 +107,7 @@ const StaffPage = () => {
                   <td className="py-4 px-4 md:px-6 text-sm text-gray-600">{member.email}</td>
                   <td className="py-4 px-4 md:px-6 text-right">
                     <button
-                      onClick={() => handleRemoveStaff(member.id)}
+                      onClick={() => setConfirmRemoveId(member.id)}
                       disabled={deletingId === member.id}
                       className="text-xs border border-red-500 text-red-500 px-3 py-1.5 rounded-md hover:bg-red-50 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -113,11 +121,38 @@ const StaffPage = () => {
         </table>
       </div>
 
+      {/* Remove Confirmation Modal */}
+      {confirmRemoveId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Remove staff member?</h3>
+              <p className="text-sm text-gray-500 mt-1">This will revoke their access immediately. This action cannot be undone.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmRemoveId(null)}
+                className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => { await handleRemoveStaff(confirmRemoveId); setConfirmRemoveId(null) }}
+                disabled={deletingId === confirmRemoveId}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
+              >
+                {deletingId === confirmRemoveId ? 'Removing...' : 'Yes, remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar Drawer */}
       {showSidebar && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            className="fixed inset-0 bg-black/40 z-40"
             onClick={() => setShowSidebar(false)}
           />
           <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
@@ -164,10 +199,17 @@ const StaffPage = () => {
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                  type="button"
+                  onClick={(e) => {
+                    if (!pendingSubmit) { setPendingSubmit(true); return }
+                    setPendingSubmit(false)
+                    handleAddStaff(e)
+                  }}
+                  className={`flex-1 text-white text-sm font-medium px-4 py-2 rounded-lg transition ${
+                    pendingSubmit ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  Add Staff
+                  {pendingSubmit ? 'Confirm?' : 'Add Staff'}
                 </button>
               </div>
             </form>

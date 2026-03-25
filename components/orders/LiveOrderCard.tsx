@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOrders } from "@/context/OrdersContext";
 import type { Order, OrderStatus } from "@/types";
 
@@ -81,6 +81,14 @@ function ActionButton({
   const [refunding, setRefunding] = useState(false);
   const [refundReason, setRefundReason] = useState("");
   const [staffName, setStaffName] = useState("");
+  const [pendingReady, setPendingReady] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
+
+  useEffect(() => {
+    if (!pendingReady) return
+    const t = setTimeout(() => setPendingReady(false), 3000)
+    return () => clearTimeout(t)
+  }, [pendingReady])
 
   const handleRefundClick = () => setConfirming(true);
   const handleCancel = () => {
@@ -140,10 +148,16 @@ function ActionButton({
     return (
       <div className="flex flex-col gap-2">
         <button
-          onClick={() => updateStatus(order.id, "ready")}
-          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
+          onClick={() => {
+            if (!pendingReady) { setPendingReady(true); return }
+            setPendingReady(false)
+            updateStatus(order.id, "ready")
+          }}
+          className={`w-full py-2 rounded-lg active:scale-95 text-white text-sm font-medium transition-all ${
+            pendingReady ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-600 hover:bg-green-700'
+          }`}
         >
-          Ready
+          {pendingReady ? 'Confirm Ready?' : 'Ready'}
         </button>
         <button
           onClick={handleRefundClick}
@@ -158,21 +172,47 @@ function ActionButton({
 
   if (order.status === "ready") {
     return (
-      <div className="flex flex-col gap-2">
-        <button
-          onClick={() => updateStatus(order.id, "completed")}
-          className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
-        >
-          Complete
-        </button>
-        <button
-          onClick={handleRefundClick}
-          disabled={refunding}
-          className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {refunding ? "Refunding..." : "Refund"}
-        </button>
-      </div>
+      <>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => setConfirmComplete(true)}
+            className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
+          >
+            Complete
+          </button>
+          <button
+            onClick={handleRefundClick}
+            disabled={refunding}
+            className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refunding ? "Refunding..." : "Refund"}
+          </button>
+        </div>
+        {confirmComplete && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Complete this order?</h3>
+                <p className="text-sm text-gray-500 mt-1">Mark the order for <span className="font-medium text-gray-700">{order.customer_name}</span> as completed.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmComplete(false)}
+                  className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { setConfirmComplete(false); updateStatus(order.id, "completed") }}
+                  className="flex-1 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                >
+                  Yes, complete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 

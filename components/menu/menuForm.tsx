@@ -52,10 +52,18 @@ const toFormData = (item: MenuItem): FormData => ({
 const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit, error }) => {
   const [form, setForm] = useState<FormData>(initialData ? toFormData(initialData) : empty)
   const [submitting, setSubmitting] = useState(false)
+  const [pendingConfirm, setPendingConfirm] = useState(false)
+
+  useEffect(() => {
+    if (!pendingConfirm) return
+    const t = setTimeout(() => setPendingConfirm(false), 3000)
+    return () => clearTimeout(t)
+  }, [pendingConfirm])
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url ?? '')
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     setForm(initialData ? toFormData(initialData) : empty)
@@ -152,7 +160,7 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
   return (
     <>
       <div
-        className="fixed inset-0 bg-black bg-opacity-30 z-40"
+        className="fixed inset-0 bg-black/40 z-40"
         onClick={onClose}
       />
       <div className="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
@@ -171,7 +179,7 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto px-8 py-6 gap-5">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto px-8 py-6 gap-5">
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-1.5">Name</label>
             <input
@@ -318,11 +326,18 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
               disabled={submitting}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition disabled:opacity-50"
+              onClick={() => {
+                if (!pendingConfirm) { setPendingConfirm(true); return }
+                setPendingConfirm(false)
+                formRef.current?.requestSubmit()
+              }}
+              className={`flex-1 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition disabled:opacity-50 ${
+                pendingConfirm ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-500 hover:bg-green-600'
+              }`}
             >
-              {submitting ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
+              {submitting ? 'Saving...' : pendingConfirm ? 'Confirm?' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
             </button>
           </div>
         </form>
