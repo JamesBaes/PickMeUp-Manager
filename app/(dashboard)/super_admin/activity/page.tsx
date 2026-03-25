@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import supabase from '@/utils/client'
 import ActivityLogList from '../../../../components/super_admin/ActivityLogList'
 
 interface LogItem {
@@ -21,14 +21,6 @@ const ActivityPage = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-
-        if (!supabaseUrl || !supabaseKey) {
-          throw new Error('Missing Supabase environment variables')
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseKey)
         const { data, error } = await supabase
           .from('logs')
           .select('id, changed_at, operation, record_pk, changed_by, txid')

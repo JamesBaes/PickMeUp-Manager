@@ -12,17 +12,6 @@ export async function getAnalytics() {
   return res.json()
 }
 
-export async function getAllOrders(restaurantId: number) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('orders')
-    .select('id, created_at, customer_name, total_cents, status')
-    .eq('restaurant_id', restaurantId)
-    .order('created_at', { ascending: false })
-
-  return data ?? []
-}
-
 export async function getTodaysOrders(restaurantId: number) {
   const supabase = await createClient()
   const today = new Date()
@@ -32,6 +21,7 @@ export async function getTodaysOrders(restaurantId: number) {
     .from('orders')
     .select('id, created_at, customer_name, total_cents, status')
     .eq('restaurant_id', restaurantId)
+    .in('status', ['in_progress', 'ready'])
     .gte('created_at', today.toISOString())
     .order('created_at', { ascending: false })
 

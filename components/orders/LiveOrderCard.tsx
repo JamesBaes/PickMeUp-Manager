@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOrders } from "@/context/OrdersContext";
 import type { Order, OrderStatus } from "@/types";
+
+function toTitleCase(str: string) {
+  return str
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function LiveOrderCard({ order }: { order: Order }) {
   const { updateStatus, refundOrder } = useOrders();
@@ -15,37 +21,47 @@ export default function LiveOrderCard({ order }: { order: Order }) {
     : null;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-base font-semibold text-gray-900">
-            {order.customer_name}
-          </p>
-          <p className="text-sm text-gray-400">{order.customer_phone}</p>
+    <div className="bg-white rounded-xl border border-gray-200 px-6 py-6 flex items-center gap-6">
+      {/* Customer */}
+      <div className="w-40 shrink-0">
+        <p className="text-sm font-semibold text-gray-900">{toTitleCase(order.customer_name)}</p>
+        <p className="text-xs text-gray-400">{order.customer_phone}</p>
+        <div className="mt-1">
+          <StatusBadge status={order.status as OrderStatus} />
         </div>
-        <StatusBadge status={order.status as OrderStatus} />
       </div>
 
-      <div className="flex flex-col gap-1">
-        {order.items.map((item) => (
-          <div key={item.name} className="flex justify-between text-sm">
-            <span className="text-gray-600">{item.name}</span>
-            <span className="text-gray-400">x{item.qty}</span>
-          </div>
-        ))}
+      {/* Items */}
+      <div className="flex-1">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Items</p>
+        <div className="flex flex-col gap-1">
+          {order.items.map((item) => {
+            const qty = item.qty ?? item.quantity ?? 1;
+            return (
+              <div key={item.name} className="flex items-center gap-2 text-sm">
+                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-xs font-medium shrink-0">{qty}</span>
+                <span className="text-gray-700">{toTitleCase(item.name)}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-2">
-        <span className="font-medium text-gray-700">${total}</span>
-        {pickupTime && <span>Pickup at {pickupTime}</span>}
+      {/* Total & pickup */}
+      <div className="w-32 shrink-0 text-right">
+        <p className="text-sm font-medium text-gray-700">${total}</p>
+        {pickupTime && <p className="text-xs text-gray-400">Pickup {pickupTime}</p>}
       </div>
 
-      <ActionButton
-        order={order}
-        total={total}
-        updateStatus={updateStatus}
-        refundOrder={refundOrder}
-      />
+      {/* Actions */}
+      <div className="w-48 shrink-0">
+        <ActionButton
+          order={order}
+          total={total}
+          updateStatus={updateStatus}
+          refundOrder={refundOrder}
+        />
+      </div>
     </div>
   );
 }
@@ -65,6 +81,14 @@ function ActionButton({
   const [refunding, setRefunding] = useState(false);
   const [refundReason, setRefundReason] = useState("");
   const [staffName, setStaffName] = useState("");
+  const [pendingReady, setPendingReady] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
+
+  useEffect(() => {
+    if (!pendingReady) return
+    const t = setTimeout(() => setPendingReady(false), 3000)
+    return () => clearTimeout(t)
+  }, [pendingReady])
 
   const handleRefundClick = () => setConfirming(true);
   const handleCancel = () => {
@@ -124,10 +148,16 @@ function ActionButton({
     return (
       <div className="flex flex-col gap-2">
         <button
-          onClick={() => updateStatus(order.id, "ready")}
-          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
+          onClick={() => {
+            if (!pendingReady) { setPendingReady(true); return }
+            setPendingReady(false)
+            updateStatus(order.id, "ready")
+          }}
+          className={`w-full py-2 rounded-lg active:scale-95 text-white text-sm font-medium transition-all ${
+            pendingReady ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-600 hover:bg-green-700'
+          }`}
         >
-          Ready
+          {pendingReady ? 'Confirm Ready?' : 'Ready'}
         </button>
         <button
           onClick={handleRefundClick}
@@ -142,21 +172,47 @@ function ActionButton({
 
   if (order.status === "ready") {
     return (
-      <div className="flex flex-col gap-2">
-        <button
-          onClick={() => updateStatus(order.id, "completed")}
-          className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
-        >
-          Complete
-        </button>
-        <button
-          onClick={handleRefundClick}
-          disabled={refunding}
-          className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {refunding ? "Refunding..." : "Refund"}
-        </button>
-      </div>
+      <>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => setConfirmComplete(true)}
+            className="w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 active:scale-95 text-white text-sm font-medium transition-all"
+          >
+            Complete
+          </button>
+          <button
+            onClick={handleRefundClick}
+            disabled={refunding}
+            className="w-full py-2 rounded-lg bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refunding ? "Refunding..." : "Refund"}
+          </button>
+        </div>
+        {confirmComplete && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Complete this order?</h3>
+                <p className="text-sm text-gray-500 mt-1">Mark the order for <span className="font-medium text-gray-700">{order.customer_name}</span> as completed.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmComplete(false)}
+                  className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { setConfirmComplete(false); updateStatus(order.id, "completed") }}
+                  className="flex-1 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+                >
+                  Yes, complete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -181,9 +237,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   }
 
   return (
-    <span
-      className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status]}`}
-    >
+    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status]}`}>
       {labels[status]}
     </span>
   );

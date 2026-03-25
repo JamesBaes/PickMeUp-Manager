@@ -68,7 +68,7 @@ export default function SalesChart({
       <p className="text-lg font-heading font-semibold text-gray-800 mb-6 text-left">
         {title}
       </p>
-      <div className="w-full flex justify-center items-center h-132">
+      <div className="w-full flex justify-center items-center h-96">
         <Bar data={chartData} options={options} width={700} height={400} />
       </div>
     </div>

@@ -45,7 +45,7 @@ export default function TopItemsChart({ items }: TopItemsChartProps) {
   return (
     <div className="bg-white rounded-md w-full">
       <h3 className="font-semibold font-heading mb-1 text-gray-800 text-md ">Popular Items</h3>
-      <Bar data={data} options={options} height={160} />
+      <Bar data={data} options={options} height={120} />
     </div>
   );
 }

@@ -1,195 +1,357 @@
 'use client'
 
-import React, { useState } from 'react'
-import { createMenuItem } from '@/utils/menu'
+import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
-interface MenuItem {
-  item_id: number
-  name: string
-  price: number
-  description: string
-  category: string
-  calories: number
-  allergy_information: string
-}
+type FormData = Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>
 
 interface MenuFormProps {
-  isOpen: boolean
+  mode: 'add' | 'edit'
+  initialData?: MenuItem
   onClose: () => void
-  onItemAdded: (item: MenuItem) => void
+  onSubmit: (data: FormData) => Promise<void>
+  error?: string | null
 }
 
-const MenuForm: React.FC<MenuFormProps> = ({ isOpen, onClose, onItemAdded }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    description: '',
-    category: '',
-    calories: '',
-    allergy_information: ''
-  })
+const CATEGORIES = [
+  'beef_burgers',
+  'chicken_burgers',
+  'steak_sandwiches',
+  'burgers',
+  'combos',
+  'crowds_sides',
+  'extra_armour_sides',
+  'treats',
+  'milkshakes',
+  'juice',
+  'soda_and_water',
+  'beverages',
+]
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
+const empty: FormData = {
+  name: '',
+  price: 0,
+  description: '',
+  category: '',
+  calories: 0,
+  allergy_information: '',
+  image_url: '',
+}
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    
-    try {
-      const result = await createMenuItem({
-        name: formData.name,
-        price: parseFloat(formData.price),
-        description: formData.description,
-        category: formData.category,
-        calories: parseInt(formData.calories),
-        allergy_information: formData.allergy_information
-      })
+const toFormData = (item: MenuItem): FormData => ({
+  name: item.name,
+  price: item.price,
+  description: item.description ?? '',
+  category: item.category,
+  calories: item.calories,
+  allergy_information: item.allergy_information ?? '',
+  image_url: item.image_url ?? '',
+})
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create menu item')
-      }
+const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit, error }) => {
+  const [form, setForm] = useState<FormData>(initialData ? toFormData(initialData) : empty)
+  const [submitting, setSubmitting] = useState(false)
+  const [pendingConfirm, setPendingConfirm] = useState(false)
 
-      // Add new item to the list
-      if (result.data) {
-        onItemAdded(result.data)
-      }
+  useEffect(() => {
+    if (!pendingConfirm) return
+    const t = setTimeout(() => setPendingConfirm(false), 3000)
+    return () => clearTimeout(t)
+  }, [pendingConfirm])
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>(initialData?.image_url ?? '')
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
-      // Reset form and close popup
-      setFormData({
-        name: '',
-        price: '',
-        description: '',
-        category: '',
-        calories: '',
-        allergy_information: ''
-      })
-      onClose()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      alert('Error adding menu item: ' + errorMessage)
+  useEffect(() => {
+    setForm(initialData ? toFormData(initialData) : empty)
+    setImageFile(null)
+    setImagePreview(initialData?.image_url ?? '')
+    setUploadError(null)
+  }, [initialData])
+
+  const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/avif', 'image/webp']
+  const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setUploadError('Invalid file type. Accepted: JPEG, PNG, AVIF, WEBP.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
+
+    if (file.size > MAX_SIZE_BYTES) {
+      setUploadError('Image must be 5 MB or smaller.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+    setUploadError(null)
   }
 
-  if (!isOpen) return null
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview('')
+    setForm((prev) => ({ ...prev, image_url: '' }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const filtered = e.target.value
+      .replace(/[^0-9.]/g, '')
+      .replace(/(\..*)\./g, '$1')
+    setForm((prev) => ({ ...prev, price: filtered as unknown as number }))
+  }
+
+  const handleSubmit = async (e: React.SyntheticEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setUploadError(null)
+
+    let image_url = form.image_url ?? ''
+
+    if (imageFile) {
+      const ext = imageFile.name.split('.').pop()
+      const path = `menu-items/${crypto.randomUUID()}_${Date.now()}.${ext}`
+      console.log('[Upload] Starting upload:', { path, size: imageFile.size, type: imageFile.type })
+      const uploadStart = Date.now()
+
+      const fd = new FormData()
+      fd.append('file', imageFile)
+      fd.append('path', path)
+
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+
+      console.log(`[Upload] Finished in ${Date.now() - uploadStart}ms`, json)
+
+      if (!res.ok) {
+        console.error('[Upload] Full error:', json)
+        setUploadError('Image upload failed: ' + json.error)
+        setSubmitting(false)
+        return
+      }
+
+      image_url = json.publicUrl
+    }
+    await onSubmit({
+      ...form,
+      price: parseFloat(String(form.price)),
+      calories: parseInt(String(form.calories)),
+      image_url,
+      description: form.description?.trim() || null,
+      allergy_information: form.allergy_information?.trim() || null,
+    })
+    setSubmitting(false)
+  }
 
   return (
     <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+      <div
+        className="fixed inset-0 bg-black/40 z-40"
         onClick={onClose}
-      ></div>
+      />
+      <div className="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
+        {/* Green accent bar matching sidebar */}
+        <div className="h-1 w-full bg-green-500" />
 
-      {/* Popup */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Add Menu Item</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
-              ×
-            </button>
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">{mode === 'edit' ? 'Edit Item' : 'Add Menu Item'}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{mode === 'edit' ? 'Update the details below' : 'Fill in the details to add a new item'}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto px-8 py-6 gap-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              placeholder="e.g. Classic Beef Burger"
+              maxLength={30}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-600 mb-1.5">Price ($)</label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Price</label>
-              <input
-                type="number"
                 name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                step="0.01"
+                value={form.price}
+                onChange={handlePriceChange}
+                maxLength={6}
+                inputMode="decimal"
                 required
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Category</label>
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-600 mb-1.5">Calories</label>
               <input
                 type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Calories</label>
-              <input
-                type="number"
                 name="calories"
-                value={formData.calories}
-                onChange={handleInputChange}
+                value={form.calories}
+                onChange={handleChange}
+                maxLength={15}
                 required
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Allergy Information</label>
-              <textarea
-                name="allergy_information"
-                value={formData.allergy_information}
-                onChange={handleInputChange}
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg p-2"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Category</label>
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent bg-white transition"
+            >
+              <option value="" disabled>Select a category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="flex gap-2 pt-4">
-              <button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Description</label>
+            <textarea
+              name="description"
+              value={form.description ?? ''}
+              onChange={handleChange}
+              rows={3}
+              maxLength={400}
+              placeholder="Briefly describe the item..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
+            />
+            <p className={`text-xs text-right mt-1 ${(form.description ?? '').length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {(form.description ?? '').length}/400
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Allergy Information</label>
+            <textarea
+              name="allergy_information"
+              value={form.allergy_information ?? ''}
+              onChange={handleChange}
+              rows={2}
+              maxLength={400}
+              placeholder="e.g. Contains gluten, dairy..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent resize-none transition"
+            />
+            <p className={`text-xs text-right mt-1 ${(form.allergy_information ?? '').length >= 400 ? 'text-red-500' : 'text-gray-400'}`}>
+              {(form.allergy_information ?? '').length}/400
+            </p>
+          </div>
+
+          {/* Image upload */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-600 mb-1.5">Item Image</label>
+            {imagePreview ? (
+              <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 mb-2">
+                <Image src={imagePreview} alt="Preview" fill className="object-cover" unoptimized />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-white border border-gray-200 text-gray-500 hover:text-red-500 rounded-full p-1 shadow transition"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-1 w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-green-400 hover:bg-green-50 transition"
               >
-                Add Item
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+                <svg className="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24">
+                  <path d="M4 16l4-4 4 4 4-6 4 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                <span className="text-xs text-gray-400">Click to upload image</span>
+                <span className="text-xs text-gray-300">JPEG, PNG, AVIF, WEBP — max 5 MB</span>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.avif,.webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {uploadError && (
+              <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+            )}
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">{error}</p>
+          )}
+
+          <div className="mt-auto flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-200 text-sm font-semibold text-gray-600 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                if (!pendingConfirm) { setPendingConfirm(true); return }
+                setPendingConfirm(false)
+                formRef.current?.requestSubmit()
+              }}
+              className={`flex-1 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition disabled:opacity-50 ${
+                pendingConfirm ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-500 hover:bg-green-600'
+              }`}
+            >
+              {submitting ? 'Saving...' : pendingConfirm ? 'Confirm?' : mode === 'edit' ? 'Save Changes' : 'Add Item'}
+            </button>
+          </div>
+        </form>
       </div>
+
+      <style>{`
+        @keyframes slide-in {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.25s ease-out;
+        }
+      `}</style>
     </>
   )
 }

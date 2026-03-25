@@ -7,8 +7,8 @@ import LogoutButton from '../LogoutButton'
 
 const superAdminLinks = [
   { page: "Dashboard", route: "/super_admin" },
-  { page: "Location Management", route: "/super_admin/staff" },
   { page: "Admin Management", route: "/super_admin/admin" },
+  { page: "Log Activity", route: "/super_admin/activity" },
 ]
 
 const SideBar = () => {
