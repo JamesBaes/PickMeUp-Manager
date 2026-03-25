@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useOrders } from '@/context/OrdersContext'
 import LiveOrderCard from '@/components/orders/LiveOrderCard'
-import Toast from '@/components/ui/Toast'
 
 const STATUS_FILTERS = [
   { label: 'All', value: 'all' },
@@ -52,8 +51,6 @@ export default function LiveOrdersPage() {
           ))}
         </div>
       )}
-
-      <Toast />
     </div>
   )
 }
