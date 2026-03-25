@@ -79,12 +79,14 @@ export const addAdmin = async (name: string, email: string, restaurant_id: numbe
 }
 
 export const deactivateAdmin = async (id: string) => {
-  const { error } = await checkSuperAdmin()
-  if (error) {
+  const { error, supabase } = await checkSuperAdmin()
+  if (error || !supabase) {
     console.error('Auth error:', error)
     return false
   }
 
+
+  // del from auth.users table as it would cascade
   const { error: deleteError } = await createAdminClient().auth.admin.deleteUser(id)
   if (deleteError) {
     console.error('Delete user error:', deleteError)

@@ -8,7 +8,7 @@ import { createClient } from '@/utils/server'
 import { getRestaurantInfo } from '@/app/(dashboard)/getRestaurantInfo'
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const { restaurantId, role } = await getRestaurantInfo()
+  const { restaurantId, role, locationName } = await getRestaurantInfo()
 
   const supabase = await createClient()
 
@@ -21,7 +21,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     .order('created_at', { ascending: true })
 
   return (
-    <RestaurantProvider initialRestaurantId={restaurantId} initialRole={role}>
+    <RestaurantProvider initialRestaurantId={restaurantId} initialRole={role} initialLocationName={locationName}>
       <OrdersProvider initialOrders={initialOrders ?? []} restaurantId={restaurantId}>
         <div className="flex min-h-screen bg-lightbg">
           <aside className="sticky top-0 h-screen min-w-24 max-w-24 bg-white border-r border-gray-200 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)]">
@@ -30,7 +30,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
             </div>
           </aside>
 
-          <main className="flex-1 overflow-y-scroll py-10 md:px-12 lg:px-64 space-y-6">
+          <main className="flex-1 overflow-y-scroll py-10 px-4 space-y-4">
             <PageTabs />
             {children}
           </main>

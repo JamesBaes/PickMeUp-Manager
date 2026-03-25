@@ -26,7 +26,7 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
   const safeOrders = Array.isArray(orders) ? orders : []
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+
   const [page, setPage] = useState(1)
 
   const filtered = safeOrders.filter((o) => {
@@ -40,15 +40,6 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
 
   const paginated = filtered.slice(0, page * PAGE_SIZE)
   const hasMore = filtered.length > paginated.length
-
-  const toggleSelect = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
 
   const shortId = (id: string) => id.replace(/-/g, '').slice(0, 8).toUpperCase()
 
@@ -96,7 +87,6 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
       <table className="min-w-full">
         <thead>
           <tr className="border-b border-gray-100">
-            <th className="pb-3 w-8" />
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Order ID</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Created</th>
             <th className="pb-3 text-left text-xs font-semibold text-gray-400">Customer</th>
@@ -108,21 +98,13 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
         <tbody className="divide-y divide-gray-50">
           {paginated.length === 0 ? (
             <tr>
-              <td colSpan={7} className="py-12 text-center text-sm text-gray-400">
+              <td colSpan={6} className="py-12 text-center text-sm text-gray-400">
                 No orders found
               </td>
             </tr>
           ) : (
             paginated.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                <td className="py-3 pr-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(order.id)}
-                    onChange={() => toggleSelect(order.id)}
-                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-200 cursor-pointer"
-                  />
-                </td>
                 <td className="py-3 pr-6">
                   <span className="text-sm font-mono text-gray-700">{shortId(order.id)}</span>
                 </td>

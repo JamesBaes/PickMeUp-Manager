@@ -25,7 +25,7 @@ export default function PageTabs() {
           <Link
             key={route}
             href={route}
-            className={`flex items-center gap-2 px-7 py-4 rounded-xl text-sm font-medium font-body border transition
+            className={`flex items-center gap-1 px-7 py-4 rounded-lg text-sm font-medium font-body border transition
               ${isActive
                 ? "bg-green-100 text-green-700 border-green-200"
                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"

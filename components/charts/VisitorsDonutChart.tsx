@@ -33,7 +33,7 @@ export default function VisitorsDonutChart({ daily, weekly }: VisitorsDonutChart
   };
 
   return (
-    <div className="bg-white h-80 flex flex-col"> 
+    <div className="bg-white h-56 flex flex-col"> 
       <Doughnut data={data} options={options} />         
     </div>
   );

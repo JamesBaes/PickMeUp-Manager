@@ -48,7 +48,7 @@ export default function OrdersTable() {
     <div>
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <h2 className="text-2xl font-heading text-gray-800 font-semibold mr-2">Incoming Orders</h2>
+        <h2 className="text-lg font-heading text-gray-800 font-semibold mr-2">Incoming Orders</h2>
         <div className="relative">
           <select
             value={statusFilter}

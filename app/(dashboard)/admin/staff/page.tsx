@@ -49,8 +49,11 @@ const StaffPage = () => {
   return (
     <div className="relative">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Staff Management</h1>
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 py-4 px-6">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900">Staff Management</h1>
+          <p className="text-sm text-gray-400">{staff.length} {staff.length === 1 ? 'member' : 'members'}</p>
+        </div>
         <button
           onClick={() => setShowSidebar(true)}
           className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition w-full sm:w-auto"
@@ -63,6 +66,7 @@ const StaffPage = () => {
       </div>
 
       {/* Table */}
+
       <div className="bg-white rounded-xl shadow overflow-x-auto">
         <table className="min-w-full">
           <thead>

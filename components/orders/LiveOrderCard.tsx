@@ -12,7 +12,6 @@ function toTitleCase(str: string) {
 
 export default function LiveOrderCard({ order }: { order: Order }) {
   const { updateStatus, refundOrder } = useOrders();
-  const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const total = (order.total_cents / 100).toFixed(2);
   const pickupTime = order.pickup_time
     ? new Date(order.pickup_time).toLocaleTimeString("en-US", {
@@ -21,75 +20,48 @@ export default function LiveOrderCard({ order }: { order: Order }) {
       })
     : null;
 
-  const isChecklist = order.status === "in_progress";
-  const allChecked = isChecklist && order.items.every((item) => checked.has(item.name));
-
-  function toggleItem(name: string) {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
-    });
-  }
-
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-base font-semibold text-gray-900">
-            {toTitleCase(order.customer_name)}
-          </p>
-          <p className="text-sm text-gray-400">{order.customer_phone}</p>
+    <div className="bg-white rounded-xl border border-gray-200 px-6 py-6 flex items-center gap-6">
+      {/* Customer */}
+      <div className="w-40 shrink-0">
+        <p className="text-sm font-semibold text-gray-900">{toTitleCase(order.customer_name)}</p>
+        <p className="text-xs text-gray-400">{order.customer_phone}</p>
+        <div className="mt-1">
+          <StatusBadge status={order.status as OrderStatus} />
         </div>
-        <StatusBadge status={order.status as OrderStatus} />
       </div>
 
-      <div className="flex flex-col gap-1">
-        {order.items.map((item) => {
-          const isItemChecked = checked.has(item.name);
-          const qty = item.qty ?? item.quantity ?? 1;
-          return (
-            <div
-              key={item.name}
-              className={`flex items-center justify-between text-sm gap-2 ${isChecklist ? "cursor-pointer select-none" : ""}`}
-              onClick={isChecklist ? () => toggleItem(item.name) : undefined}
-            >
-              {isChecklist && (
-                <span
-                  className={`flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                    isItemChecked
-                      ? "bg-green-500 border-green-500"
-                      : "border-gray-300 bg-white"
-                  }`}
-                >
-                  {isItemChecked && (
-                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-              )}
-              <span className={`flex-1 ${isItemChecked ? "line-through text-gray-400" : "text-gray-700"}`}>
-                {toTitleCase(item.name)}
-              </span>
-              <span className="text-gray-400 text-xs font-medium">x{qty}</span>
-            </div>
-          );
-        })}
+      {/* Items */}
+      <div className="flex-1">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Items</p>
+        <div className="flex flex-col gap-1">
+          {order.items.map((item) => {
+            const qty = item.qty ?? item.quantity ?? 1;
+            return (
+              <div key={item.name} className="flex items-center gap-2 text-sm">
+                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 text-xs font-medium shrink-0">{qty}</span>
+                <span className="text-gray-700">{toTitleCase(item.name)}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-2">
-        <span className="font-medium text-gray-700">${total}</span>
-        {pickupTime && <span>Pickup at {pickupTime}</span>}
+      {/* Total & pickup */}
+      <div className="w-32 shrink-0 text-right">
+        <p className="text-sm font-medium text-gray-700">${total}</p>
+        {pickupTime && <p className="text-xs text-gray-400">Pickup {pickupTime}</p>}
       </div>
 
-      <ActionButton
-        order={order}
-        total={total}
-        allChecked={allChecked}
-        updateStatus={updateStatus}
-        refundOrder={refundOrder}
-      />
+      {/* Actions */}
+      <div className="w-48 shrink-0">
+        <ActionButton
+          order={order}
+          total={total}
+          updateStatus={updateStatus}
+          refundOrder={refundOrder}
+        />
+      </div>
     </div>
   );
 }
@@ -97,13 +69,11 @@ export default function LiveOrderCard({ order }: { order: Order }) {
 function ActionButton({
   order,
   total,
-  allChecked,
   updateStatus,
   refundOrder,
 }: {
   order: Order;
   total: string;
-  allChecked: boolean;
   updateStatus: (id: string, status: OrderStatus) => Promise<void>;
   refundOrder: (id: string, reason: string, staffName: string) => Promise<void>;
 }) {
@@ -171,8 +141,7 @@ function ActionButton({
       <div className="flex flex-col gap-2">
         <button
           onClick={() => updateStatus(order.id, "ready")}
-          disabled={!allChecked}
-          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-medium transition-all"
         >
           Ready
         </button>
@@ -228,11 +197,8 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   }
 
   return (
-    <span
-      className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status]}`}
-    >
+    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[status]}`}>
       {labels[status]}
     </span>
   );
 }
- 

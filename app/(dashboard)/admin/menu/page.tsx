@@ -138,10 +138,10 @@ const MenuPage = () => {
   return (
     <div className="relative">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 py-3 -mx-6 px-6">
+      <div className="sticky top-0 z-10 bg-white rounded-lg border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 py-4 px-6">
         {/* Left: Title + pagination nav */}
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl md:text-3xl font-bold">Menu</h1>
+          <h1 className="text-lg font-semibold">Menu</h1>
           <div className="flex items-center gap-1">
             {navBtn('«', 1, safePage === 1)}
             {navBtn('‹', safePage - 1, safePage === 1)}

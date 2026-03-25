@@ -10,6 +10,7 @@ interface RestaurantContextValue {
   role: UserRole
   isAdmin: boolean
   loading: boolean
+  locationName: string | null
 }
 
 const RestaurantContext = createContext<RestaurantContextValue | null>(null)
@@ -24,13 +25,16 @@ export function RestaurantProvider({
   children,
   initialRestaurantId,
   initialRole,
+  initialLocationName,
 }: {
   children: React.ReactNode
   initialRestaurantId: number | null
   initialRole: UserRole
+  initialLocationName: string | null
 }) {
   const [restaurantId, setRestaurantId] = useState<number | null>(initialRestaurantId)
   const [role, setRole] = useState<UserRole>(initialRole)
+  const [locationName] = useState<string | null>(initialLocationName)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export function RestaurantProvider({
   const isAdmin = role === 'admin' || role === 'super_admin'
 
   return (
-    <RestaurantContext.Provider value={{ restaurantId, role, isAdmin, loading }}>
+    <RestaurantContext.Provider value={{ restaurantId, role, isAdmin, loading, locationName }}>
       {children}
     </RestaurantContext.Provider>
   )
