@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { handleSubmit } from './action'
@@ -68,7 +68,7 @@ const ForgotPassword = () => {
               </p>
               <Link
                 href="/"
-                className="block text-sm underline text-[#0074BF] hover:text-[#026cb3] font-body"
+                className="block text-sm underline text-brand-blue hover:text-brand-blue-link-hover font-body"
               >
                 Back to Login
               </Link>
@@ -96,7 +96,7 @@ const ForgotPassword = () => {
               </div>
 
               <div className="text-right font-body">
-                <Link href="/" className="text-sm underline text-[#0074BF] hover:text-[#026cb3]">
+                <Link href="/" className="text-sm underline text-brand-blue hover:text-brand-blue-link-hover">
                   Back to Login
                 </Link>
               </div>
@@ -104,7 +104,7 @@ const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={loading || !!(error && error.includes("not registered"))}
-                className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full cursor-pointer bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </button>

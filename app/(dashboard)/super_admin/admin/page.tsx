@@ -1,6 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchAdmins, fetchRestaurantLocations, deactivateAdmin, addAdmin } from "./adminApi";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import SlideDrawer from "@/components/ui/SlideDrawer";
 
 type Admin = {
   id: string;
@@ -21,7 +23,6 @@ const AdminPage = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", restaurant_id: "" });
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  // State for confirmation modal
   const [adminToDelete, setAdminToDelete] = useState<Admin | null>(null);
 
   useEffect(() => {
@@ -36,7 +37,6 @@ const AdminPage = () => {
     load();
   }, []);
 
-  // Handles actual deletion after confirmation
   const handleDeactivateAdmin = async (id: string) => {
     setDeletingId(id);
     const success = await deactivateAdmin(id);
@@ -47,23 +47,21 @@ const AdminPage = () => {
     setAdminToDelete(null);
   };
 
-  const handleAddAdmin = async (e: React.SyntheticEvent) => {
+  const handleAddAdmin = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.restaurant_id) return;
-
     const newAdmin = await addAdmin(form.name, form.email, Number(form.restaurant_id));
     if (newAdmin) {
       setAdmins((prev) => [...prev, newAdmin]);
     }
-
     setForm({ name: "", email: "", restaurant_id: "" });
     setShowSidebar(false);
   };
 
   const getLocationName = (id: number | null) => {
-    if (!id) return '—'
-    return locations.find((l) => l.restaurant_id === id)?.location_name ?? '—'
-  }
+    if (!id) return '—';
+    return locations.find((l) => l.restaurant_id === id)?.location_name ?? '—';
+  };
 
   return (
     <div className="relative">
@@ -89,6 +87,7 @@ const AdminPage = () => {
               <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Name</th>
               <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Role</th>
               <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Email</th>
+              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Location</th>
               <th />
             </tr>
           </thead>
@@ -105,6 +104,7 @@ const AdminPage = () => {
                 </td>
                 <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{admin.role}</td>
                 <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{admin.email}</td>
+                <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{getLocationName(admin.restaurant_id)}</td>
                 <td className="py-4 px-4 md:px-6 text-right">
                   <button
                     onClick={() => setAdminToDelete(admin)}
@@ -113,35 +113,6 @@ const AdminPage = () => {
                   >
                     {deletingId === admin.id ? 'Deleting...' : 'Delete Admin'}
                   </button>
-                      {/* Confirmation Modal for Deleting Admin */}
-                      {adminToDelete && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
-                            <div className="px-6 py-5 border-b text-center">
-                              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
-                            </div>
-                            <div className="px-6 py-4 text-center">
-                              <p className="mb-4">Are you sure you want to delete <span className="font-bold">{adminToDelete.name}</span>?</p>
-                              <div className="flex justify-center gap-3">
-                                <button
-                                  className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                  onClick={() => setAdminToDelete(null)}
-                                  disabled={deletingId === adminToDelete.id}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                                  onClick={() => handleDeactivateAdmin(adminToDelete.id)}
-                                  disabled={deletingId === adminToDelete.id}
-                                >
-                                  {deletingId === adminToDelete.id ? 'Deleting...' : 'Confirm'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                 </td>
               </tr>
             ))}
@@ -149,91 +120,75 @@ const AdminPage = () => {
         </table>
       </div>
 
-      {/* Sidebar Drawer */}
+      {adminToDelete && (
+        <ConfirmModal
+          title="Delete admin?"
+          message={<>Are you sure you want to delete <strong>{adminToDelete.name}</strong>? This action cannot be undone.</>}
+          confirmLabel="Delete"
+          confirming={deletingId === adminToDelete.id}
+          onConfirm={() => handleDeactivateAdmin(adminToDelete.id)}
+          onCancel={() => setAdminToDelete(null)}
+        />
+      )}
+
       {showSidebar && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/30 z-40"
-            onClick={() => setShowSidebar(false)}
-          />
-          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Add New Admin</h2>
-              <button
-                onClick={() => setShowSidebar(false)}
-                className="text-gray-400 hover:text-gray-600"
+        <SlideDrawer title="Add New Admin" onClose={() => setShowSidebar(false)}>
+          <form onSubmit={handleAddAdmin} className="flex flex-col flex-1 p-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                placeholder="john@company.com"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Restaurant Location</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.restaurant_id}
+                onChange={(e) => setForm((f) => ({ ...f, restaurant_id: e.target.value }))}
+                required
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+                <option value="">Select a location</option>
+                {locations.map((loc) => (
+                  <option key={loc.restaurant_id} value={loc.restaurant_id}>
+                    {loc.location_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-auto flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSidebar(false)}
+                className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+              >
+                Add Admin
               </button>
             </div>
-            <form onSubmit={handleAddAdmin} className="flex flex-col flex-1 p-6 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  placeholder="john@company.com"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Restaurant Location</label>
-                <select
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={form.restaurant_id}
-                  onChange={(e) => setForm((f) => ({ ...f, restaurant_id: e.target.value }))}
-                  required
-                >
-                  <option value="">Select a location</option>
-                  {locations.map((loc) => (
-                    <option key={loc.restaurant_id} value={loc.restaurant_id}>
-                      {loc.location_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mt-auto flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSidebar(false)}
-                  className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-                >
-                  Add Admin
-                </button>
-              </div>
-            </form>
-          </div>
-          <style>{`
-            @keyframes slide-in {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
-            }
-            .animate-slide-in {
-              animation: slide-in 0.25s ease-out;
-            }
-          `}</style>
-        </>
+          </form>
+        </SlideDrawer>
       )}
     </div>
   );

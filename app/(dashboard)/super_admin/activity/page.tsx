@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import supabase from '@/utils/client'
-import ActivityLogList from '../../../../components/super_admin/ActivityLogList'
+import ActivityLogList from '@/components/super_admin/ActivityLogList'
 
 export interface LogItem {
   id: string

@@ -17,7 +17,7 @@ export function useOrderActions(
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const clearToast = useCallback(() => setToast(null), [])
 
-  const syncQueueRef = (queue: Order[]) => { queueRef.current = queue }
+  const syncQueueRef = useCallback((queue: Order[]) => { queueRef.current = queue }, [])
 
   const acceptOrder = useCallback(async (id: string, pickupTime?: string) => {
     setQueue((prev) => prev.filter((o) => o.id !== id))

@@ -1,126 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRestaurant } from '@/context/RestaurantContext'
-import { getAllMenuItems, createMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemVisibility } from './menu'
-import type { MenuItem } from './menu'
+import { useMenuPage, PER_PAGE_OPTIONS, SORT_LABELS, type PerPage } from '@/hooks/useMenuPage'
 import MenuList from '@/components/menu/menuList'
 import MenuForm from '@/components/menu/menuForm'
 
 type SortKey = 'name' | 'category' | 'price' | 'hidden'
-type SortDir = 'asc' | 'desc'
-type PerPage = 20 | 30 | 50
-
-const SORT_LABELS: Record<SortKey, string> = { name: 'Name', category: 'Category', price: 'Price', hidden: 'Hidden' }
-const PER_PAGE_OPTIONS: PerPage[] = [20, 30, 50]
 
 const MenuPage = () => {
   const { isAdmin } = useRestaurant()
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showSidebar, setShowSidebar] = useState(false)
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState<PerPage>(20)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
-    setCurrentPage(1)
-  }
-
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-  const q = normalize(searchQuery)
-  const filteredItems = q
-    ? menuItems.filter((item) =>
-        normalize(item.name).includes(q) ||
-        normalize(item.description ?? '').includes(q) ||
-        normalize(item.allergy_information ?? '').includes(q)
-      )
-    : menuItems
-
-  const sortedItems = sortKey
-    ? [...filteredItems].sort((a, b) => {
-        let cmp: number
-        if (sortKey === 'price') cmp = a.price - b.price
-        else if (sortKey === 'hidden') cmp = (a.is_hidden ? 1 : 0) - (b.is_hidden ? 1 : 0)
-        else cmp = a[sortKey].localeCompare(b[sortKey])
-        return sortDir === 'asc' ? cmp : -cmp
-      })
-    : filteredItems
-
-  const totalPages = Math.max(1, Math.ceil(sortedItems.length / itemsPerPage))
-  const safePage = Math.min(currentPage, totalPages)
-  const paginatedItems = sortedItems.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage)
-
-  const goToPage = (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages)))
-
-  const loadItems = async () => {
-    const result = await getAllMenuItems()
-    if (result.success && result.data) setMenuItems(result.data)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    loadItems()
-  }, [])
-
-  const handleAdd = async (data: Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>) => {
-    setFormError(null)
-    const result = await createMenuItem(data)
-    if (result.success) {
-      await loadItems()
-      setShowSidebar(false)
-    } else {
-      setFormError(result.error ?? 'Failed to add item')
-    }
-  }
-
-  const handleEdit = async (data: Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>) => {
-    if (!editingItem) return
-    const result = await updateMenuItem({ item_id: editingItem.item_id, ...data })
-    if (result.success && result.data) {
-      setMenuItems((prev) => prev.map((i) => (i.item_id === editingItem.item_id ? result.data! : i)))
-    }
-    setEditingItem(null)
-    setShowSidebar(false)
-  }
-
-  const handleDelete = async (id: number) => {
-    setDeletingId(id)
-    const result = await deleteMenuItem(id)
-    if (result.success) {
-      setMenuItems((prev) => prev.filter((i) => i.item_id !== id))
-    }
-    setDeletingId(null)
-  }
-
-  const handleToggleHide = async (id: number, isHidden: boolean) => {
-    const result = await toggleMenuItemVisibility(id, isHidden)
-    if (result.success) {
-      setMenuItems((prev) => prev.map((i) => i.item_id === id ? { ...i, is_hidden: isHidden } : i))
-    }
-  }
-
-  const openEdit = (item: MenuItem) => {
-    setEditingItem(item)
-    setShowSidebar(true)
-  }
-
-  const closeForm = () => {
-    setShowSidebar(false)
-    setEditingItem(null)
-    setFormError(null)
-  }
+  const {
+    paginatedItems,
+    loading,
+    totalPages,
+    safePage,
+    sortKey,
+    sortDir,
+    itemsPerPage,
+    searchQuery,
+    showSidebar,
+    editingItem,
+    deletingId,
+    formError,
+    handleSort,
+    handleAdd,
+    handleEdit,
+    handleDelete,
+    handleToggleHide,
+    openEdit,
+    closeForm,
+    goToPage,
+    setSearchQuery,
+    setItemsPerPage,
+    setShowSidebar,
+  } = useMenuPage()
 
   if (loading) return <div className="py-12 text-center text-sm text-gray-400">Loading menu...</div>
 
@@ -157,7 +70,7 @@ const MenuPage = () => {
             {PER_PAGE_OPTIONS.map((n) => (
               <button
                 key={n}
-                onClick={() => { setItemsPerPage(n); setCurrentPage(1) }}
+                onClick={() => setItemsPerPage(n as PerPage)}
                 className={`text-xs px-2 py-0.5 rounded-md transition ${
                   itemsPerPage === n ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                 }`}
@@ -179,14 +92,14 @@ const MenuPage = () => {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 maxLength={50}
                 placeholder="Search..."
                 className="w-48 pl-9 pr-7 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
               />
               {searchQuery && (
                 <button
-                  onClick={() => { setSearchQuery(''); setCurrentPage(1) }}
+                  onClick={() => setSearchQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                   aria-label="Clear search"
                 >
@@ -203,9 +116,7 @@ const MenuPage = () => {
                   key={key}
                   onClick={() => handleSort(key)}
                   className={`text-xs px-2.5 py-1 rounded-md transition flex items-center gap-0.5 ${
-                    sortKey === key
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-500 hover:bg-gray-100'
+                    sortKey === key ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
                   {SORT_LABELS[key]}
@@ -216,7 +127,7 @@ const MenuPage = () => {
               ))}
             </div>
             <button
-              onClick={() => { setEditingItem(null); setShowSidebar(true) }}
+              onClick={() => { setShowSidebar(true) }}
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">

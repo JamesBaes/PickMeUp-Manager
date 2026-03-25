@@ -3,12 +3,8 @@
 import { useState, useEffect } from "react";
 import { useOrders } from "@/context/OrdersContext";
 import type { Order, OrderStatus } from "@/types";
-
-function toTitleCase(str: string) {
-  return str
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+import { toTitleCase } from "@/types";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function LiveOrderCard({ order }: { order: Order }) {
   const { updateStatus, refundOrder } = useOrders();
@@ -189,28 +185,14 @@ function ActionButton({
           </button>
         </div>
         {confirmComplete && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Complete this order?</h3>
-                <p className="text-sm text-gray-500 mt-1">Mark the order for <span className="font-medium text-gray-700">{order.customer_name}</span> as completed.</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmComplete(false)}
-                  className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => { setConfirmComplete(false); updateStatus(order.id, "completed") }}
-                  className="flex-1 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-                >
-                  Yes, complete
-                </button>
-              </div>
-            </div>
-          </div>
+          <ConfirmModal
+            title="Complete this order?"
+            message={<>Mark the order for <span className="font-medium text-gray-700">{order.customer_name}</span> as completed.</>}
+            confirmLabel="Yes, complete"
+            confirmClassName="flex-1 bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+            onConfirm={() => { setConfirmComplete(false); updateStatus(order.id, "completed") }}
+            onCancel={() => setConfirmComplete(false)}
+          />
         )}
       </>
     );

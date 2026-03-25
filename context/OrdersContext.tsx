@@ -51,7 +51,7 @@ export function OrdersProvider({
   const { acceptOrder, rejectOrder, updateStatus, refundOrder, toast, clearToast, syncQueueRef }
    = useOrderActions(setQueue, setLiveOrders)
 
-  useEffect(() => { syncQueueRef(queue) }, [queue])
+  useEffect(() => { syncQueueRef(queue) }, [queue, syncQueueRef])
 
   useOrdersRealtime(restaurantId, setQueue, setLiveOrders)
 

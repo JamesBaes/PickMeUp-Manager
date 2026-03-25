@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import type { MenuItem } from '@/app/(dashboard)/admin/menu/menu'
 
-type FormData = Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>
+type MenuItemFormData = Omit<MenuItem, 'item_id' | 'created_at' | 'updated_at'>
 
 interface MenuFormProps {
   mode: 'add' | 'edit'
   initialData?: MenuItem
   onClose: () => void
-  onSubmit: (data: FormData) => Promise<void>
+  onSubmit: (data: MenuItemFormData) => Promise<void>
   error?: string | null
 }
 
@@ -29,7 +29,7 @@ const CATEGORIES = [
   'beverages',
 ]
 
-const empty: FormData = {
+const empty: MenuItemFormData = {
   name: '',
   price: 0,
   description: '',
@@ -39,7 +39,7 @@ const empty: FormData = {
   image_url: '',
 }
 
-const toFormData = (item: MenuItem): FormData => ({
+const toFormData = (item: MenuItem): MenuItemFormData => ({
   name: item.name,
   price: item.price,
   description: item.description ?? '',
@@ -50,7 +50,7 @@ const toFormData = (item: MenuItem): FormData => ({
 })
 
 const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmit, error }) => {
-  const [form, setForm] = useState<FormData>(initialData ? toFormData(initialData) : empty)
+  const [form, setForm] = useState<MenuItemFormData>(initialData ? toFormData(initialData) : empty)
   const [submitting, setSubmitting] = useState(false)
   const [pendingConfirm, setPendingConfirm] = useState(false)
 
@@ -125,8 +125,6 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
     if (imageFile) {
       const ext = imageFile.name.split('.').pop()
       const path = `menu-items/${crypto.randomUUID()}_${Date.now()}.${ext}`
-      console.log('[Upload] Starting upload:', { path, size: imageFile.size, type: imageFile.type })
-      const uploadStart = Date.now()
 
       const fd = new FormData()
       fd.append('file', imageFile)
@@ -135,10 +133,7 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const json = await res.json()
 
-      console.log(`[Upload] Finished in ${Date.now() - uploadStart}ms`, json)
-
       if (!res.ok) {
-        console.error('[Upload] Full error:', json)
         setUploadError('Image upload failed: ' + json.error)
         setSubmitting(false)
         return
@@ -343,15 +338,6 @@ const MenuForm: React.FC<MenuFormProps> = ({ mode, initialData, onClose, onSubmi
         </form>
       </div>
 
-      <style>{`
-        @keyframes slide-in {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.25s ease-out;
-        }
-      `}</style>
     </>
   )
 }

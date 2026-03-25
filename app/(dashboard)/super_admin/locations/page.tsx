@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { fetchLocations, addLocation, updateLocation, deleteLocation } from './locationApi'
 import type { Location } from './locationApi'
+import ConfirmModal from '@/components/ui/ConfirmModal'
+import SlideDrawer from '@/components/ui/SlideDrawer'
 
 const LocationsPage = () => {
   const [locations, setLocations] = useState<Location[]>([])
@@ -10,12 +12,10 @@ const LocationsPage = () => {
   const [newName, setNewName] = useState('')
   const [adding, setAdding] = useState(false)
 
-  // Edit state
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Delete state
   const [locationToDelete, setLocationToDelete] = useState<Location | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -23,7 +23,7 @@ const LocationsPage = () => {
     fetchLocations().then(setLocations)
   }, [])
 
-  const handleAdd = async (e: React.SyntheticEvent) => {
+  const handleAdd = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     if (!newName.trim()) return
     setAdding(true)
@@ -171,91 +171,49 @@ const LocationsPage = () => {
         </table>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {locationToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
-            <div className="px-6 py-5 border-b text-center">
-              <h3 className="text-lg font-semibold">Confirm Deletion</h3>
-            </div>
-            <div className="px-6 py-4 text-center">
-              <p className="mb-4">
-                Are you sure you want to delete <span className="font-bold">{locationToDelete.location_name}</span>?
-              </p>
-              <div className="flex justify-center gap-3">
-                <button
-                  className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  onClick={() => setLocationToDelete(null)}
-                  disabled={deleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting...' : 'Confirm'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Delete location?"
+          message={<>Are you sure you want to delete <strong>{locationToDelete.location_name}</strong>? This action cannot be undone.</>}
+          confirmLabel="Delete"
+          confirming={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setLocationToDelete(null)}
+        />
       )}
 
-      {/* Add Location Sidebar Drawer */}
       {showSidebar && (
-        <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowSidebar(false)} />
-          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Add New Location</h2>
-              <button onClick={() => setShowSidebar(false)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+        <SlideDrawer title="Add New Location" onClose={() => setShowSidebar(false)}>
+          <form onSubmit={handleAdd} className="flex flex-col flex-1 p-6 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Location Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Downtown Branch"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mt-auto flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSidebar(false)}
+                className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={adding}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
+              >
+                {adding ? 'Adding...' : 'Add Location'}
               </button>
             </div>
-            <form onSubmit={handleAdd} className="flex flex-col flex-1 p-6 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Location Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Downtown Branch"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mt-auto flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSidebar(false)}
-                  className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={adding}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
-                >
-                  {adding ? 'Adding...' : 'Add Location'}
-                </button>
-              </div>
-            </form>
-          </div>
-          <style>{`
-            @keyframes slide-in {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
-            }
-            .animate-slide-in {
-              animation: slide-in 0.25s ease-out;
-            }
-          `}</style>
-        </>
+          </form>
+        </SlideDrawer>
       )}
     </div>
   )

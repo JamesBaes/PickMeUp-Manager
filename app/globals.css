@@ -1,33 +1,50 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand & base */
   --background: #FFFFFF;
   --foreground: #001219;
   --offwhite: #F2F0EF;
+  --lightbg: #F2F0EF;
+
+  /* Brand red (sidebar accents, super-admin hover) */
   --accent: #A30000;
   --secondary: #850000;
   --active: #6d0000;
-  --lightbg: #F2F0EF;
+
+  /* Brand blue (login page button + link) */
+  --brand-blue: #0074BF;
+  --brand-blue-hover: #05609c;
+  --brand-blue-link-hover: #026cb3;
+
+  /* Dashboard surface colours */
   --dashboard-page: #f4f4f4;
   --dashboard-panel: #efefef;
   --dashboard-card: #f8f8f8;
   --dashboard-border: #d8d8d8;
+
+  /* Dashboard semantic colours */
   --dashboard-success: #2c7d59;
   --dashboard-success-soft: #baf7d1;
   --dashboard-ring: #34d7bf;
   --dashboard-ring-track: #ea8ea5;
 }
 
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-offwhite: var(--offwhite);
+  --color-lightbg: var(--lightbg);
+
   --color-accent: var(--accent);
-  --font-heading: var(--font-heading);
-  --font-body: var(--font-body);
   --color-secondary: var(--secondary);
   --color-active: var(--active);
-  --color-lightbg: var(--lightbg);
+
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-hover: var(--brand-blue-hover);
+  --color-brand-blue-link-hover: var(--brand-blue-link-hover);
+
   --color-dashboard-page: var(--dashboard-page);
   --color-dashboard-panel: var(--dashboard-panel);
   --color-dashboard-card: var(--dashboard-card);
@@ -36,8 +53,12 @@
   --color-dashboard-success-soft: var(--dashboard-success-soft);
   --color-dashboard-ring: var(--dashboard-ring);
   --color-dashboard-ring-track: var(--dashboard-ring-track);
+
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
 }
 
+/* Keep light theme even when OS is dark (app is always light) */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #FFFFFF;
@@ -49,4 +70,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-heading), sans-serif;
+}
+
+
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out;
 }

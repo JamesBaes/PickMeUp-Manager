@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { flushSync } from "react-dom";
 import Image from "next/image";
 import { login } from "@/app/actions/login";
 import Link from "next/link";
@@ -17,7 +18,7 @@ export default function LoginForm({
 
   const handleLogin = async (formData: FormData) => {
     setError(null);
-    setLoading(true);
+    flushSync(() => setLoading(true));
 
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -27,19 +28,36 @@ export default function LoginForm({
 
       if (result?.error) {
         setError(result.error);
+        setLoading(false);
       } else if (result?.redirectTo) {
         window.location.href = result.redirectTo;
+        // Keep loading=true — overlay stays up while the browser navigates
       }
     } catch (err) {
-      console.log("Unexpected error during login:", err);
+      console.error("Unexpected error during login:", err);
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {/* Loading overlay */}
+      {loading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white rounded-xl">
+          <svg
+            className="animate-spin h-8 w-8 text-brand-blue"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm font-medium text-gray-500 font-body">Logging in...</p>
+        </div>
+      )}
+
       {/* Logo */}
       <div className="flex justify-center mb-8 flex-col items-center gap-3">
         <Image
@@ -113,7 +131,7 @@ export default function LoginForm({
         <div className="text-right font-body">
           <Link
             href={forgotPasswordLink}
-            className="text-sm underline text-[#0074BF] hover:text-[#026cb3]"
+            className="text-sm underline text-brand-blue hover:text-brand-blue-link-hover"
           >
             Forgot password?
           </Link>
@@ -123,9 +141,9 @@ export default function LoginForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
+          className="w-full cursor-pointer bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
         >
-          {loading ? "Logging in..." : "Log In"}
+          Log In
         </button>
       </form>
     </div>

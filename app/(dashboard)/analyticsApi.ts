@@ -40,9 +40,7 @@ export async function getWeeklySales(restaurantId: number) {
     .eq('restaurant_id', restaurantId)
     .in('status', ['paid', 'completed'])
     .gte('created_at', sevenDaysAgo.toISOString())
-  
-  // rest of grouping logic stays the same
-    
+
   // Group by day
   const dayMap: Record<string, number> = {};
   for (let i = 6; i >= 0; i--) {
@@ -60,9 +58,5 @@ export async function getWeeklySales(restaurantId: number) {
   return {
     labels: Object.keys(dayMap),
     data: Object.values(dayMap),
-  };
+  }
 }
-
-
-
-

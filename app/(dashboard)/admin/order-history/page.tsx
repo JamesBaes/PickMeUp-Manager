@@ -1,4 +1,3 @@
-import React from 'react'
 import { getRestaurantInfo } from '@/app/(dashboard)/getRestaurantInfo'
 import { getAllOrders } from './actions'
 import OrderHistoryTable from '@/components/orders/OrderHistoryTable'

@@ -1,6 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchStaff, deactivateStaff, addStaff } from "./staffApi";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import SlideDrawer from "@/components/ui/SlideDrawer";
 
 type Staff = {
   id: string;
@@ -18,10 +20,10 @@ const StaffPage = () => {
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   useEffect(() => {
-    if (!pendingSubmit) return
-    const t = setTimeout(() => setPendingSubmit(false), 3000)
-    return () => clearTimeout(t)
-  }, [pendingSubmit])
+    if (!pendingSubmit) return;
+    const t = setTimeout(() => setPendingSubmit(false), 3000);
+    return () => clearTimeout(t);
+  }, [pendingSubmit]);
 
   useEffect(() => {
     const loadStaff = async () => {
@@ -40,16 +42,13 @@ const StaffPage = () => {
     setDeletingId(null);
   };
 
-  const handleAddStaff = async (e: React.SyntheticEvent) => {
+  const handleAddStaff = async (e: { preventDefault(): void }) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
-
-    // restaurant_id is automatically scoped server-side to the admin's restaurant
     const result = await addStaff(form.name, form.email);
     if (result) {
       setStaff((prev) => [...prev, result]);
     }
-
     setForm({ name: "", email: "" });
     setShowSidebar(false);
   };
@@ -74,7 +73,6 @@ const StaffPage = () => {
       </div>
 
       {/* Table */}
-
       <div className="bg-white rounded-xl shadow overflow-x-auto">
         <table className="min-w-full">
           <thead>
@@ -121,109 +119,66 @@ const StaffPage = () => {
         </table>
       </div>
 
-      {/* Remove Confirmation Modal */}
       {confirmRemoveId && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+        <ConfirmModal
+          title="Remove staff member?"
+          message="This will revoke their access immediately. This action cannot be undone."
+          confirmLabel="Yes, remove"
+          confirming={deletingId === confirmRemoveId}
+          onConfirm={async () => { await handleRemoveStaff(confirmRemoveId); setConfirmRemoveId(null); }}
+          onCancel={() => setConfirmRemoveId(null)}
+        />
+      )}
+
+      {showSidebar && (
+        <SlideDrawer title="Add New Staff Member" onClose={() => setShowSidebar(false)}>
+          <form onSubmit={handleAddStaff} className="flex flex-col flex-1 p-6 gap-4">
             <div>
-              <h3 className="text-base font-semibold text-gray-900">Remove staff member?</h3>
-              <p className="text-sm text-gray-500 mt-1">This will revoke their access immediately. This action cannot be undone.</p>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+              />
             </div>
-            <div className="flex gap-2">
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                placeholder="john@company.com"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="mt-auto flex gap-2">
               <button
-                onClick={() => setConfirmRemoveId(null)}
-                className="flex-1 border border-gray-200 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                type="button"
+                onClick={() => setShowSidebar(false)}
+                className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={async () => { await handleRemoveStaff(confirmRemoveId); setConfirmRemoveId(null) }}
-                disabled={deletingId === confirmRemoveId}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50"
+                type="button"
+                onClick={(e) => {
+                  if (!pendingSubmit) { setPendingSubmit(true); return; }
+                  setPendingSubmit(false);
+                  handleAddStaff(e);
+                }}
+                className={`flex-1 text-white text-sm font-medium px-4 py-2 rounded-lg transition ${
+                  pendingSubmit ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                {deletingId === confirmRemoveId ? 'Removing...' : 'Yes, remove'}
+                {pendingSubmit ? 'Confirm?' : 'Add Staff'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sidebar Drawer */}
-      {showSidebar && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setShowSidebar(false)}
-          />
-          <div className="fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Add New Staff Member</h2>
-              <button
-                onClick={() => setShowSidebar(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-            <form onSubmit={handleAddStaff} className="flex flex-col flex-1 p-6 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  placeholder="john@company.com"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="mt-auto flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSidebar(false)}
-                  className="flex-1 border text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    if (!pendingSubmit) { setPendingSubmit(true); return }
-                    setPendingSubmit(false)
-                    handleAddStaff(e)
-                  }}
-                  className={`flex-1 text-white text-sm font-medium px-4 py-2 rounded-lg transition ${
-                    pendingSubmit ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  {pendingSubmit ? 'Confirm?' : 'Add Staff'}
-                </button>
-              </div>
-            </form>
-          </div>
-          <style>{`
-            @keyframes slide-in {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
-            }
-            .animate-slide-in {
-              animation: slide-in 0.25s ease-out;
-            }
-          `}</style>
-        </>
+          </form>
+        </SlideDrawer>
       )}
     </div>
   );

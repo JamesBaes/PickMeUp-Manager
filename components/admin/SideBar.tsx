@@ -51,7 +51,7 @@ const SideBar = () => {
           const isActive = pathname === page.route
           const Icon = page.icon
           return (
-            <div key={index} className="relative group w-full">
+            <div key={page.route} className="relative group w-full">
               <Link
                 href={page.route}
                 className={`flex items-center justify-center w-full p-3.5 rounded-xl transition

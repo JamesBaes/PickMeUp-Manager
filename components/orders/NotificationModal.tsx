@@ -2,16 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useOrders } from "@/context/OrdersContext";
-
-function toTitleCase(str: string) {
-  return str
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+import { toTitleCase } from "@/types";
 
 export default function NotificationModal() {
   const router = useRouter();
-  const { currentNotification, queue, acceptOrder, rejectOrder } = useOrders();
+  const { currentNotification, queue, acceptOrder } = useOrders();
 
   if (!currentNotification) return null;
 
@@ -66,12 +61,6 @@ export default function NotificationModal() {
 
         {/* Actions */}
         <div className="px-5 py-4 flex gap-3">
-          {/* <button
-            onClick={() => rejectOrder(order.id)}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            Reject
-          </button> */}
           <button
             onClick={() => {
               acceptOrder(order.id);

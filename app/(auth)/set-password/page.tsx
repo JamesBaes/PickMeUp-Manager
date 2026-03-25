@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, EyeOff, Check, X } from 'lucide-react'
@@ -54,7 +54,7 @@ const SetPassword = () => {
   const allValid = requirements.every(r => r.test(newPassword))
   const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0
 
-  const handleSubmit = async (e: React.SyntheticEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
@@ -118,7 +118,7 @@ const SetPassword = () => {
               </p>
               <Link
                 href="/"
-                className="block text-sm underline text-[#0074BF] hover:text-[#026cb3] font-body"
+                className="block text-sm underline text-brand-blue hover:text-brand-blue-link-hover font-body"
               >
                 Click here if not redirected
               </Link>
@@ -197,14 +197,14 @@ const SetPassword = () => {
                 </ul>
               </div>
               <div className="text-right font-body">
-                <Link href="/" className="text-sm underline text-[#0074BF] hover:text-[#026cb3]">
+                <Link href="/" className="text-sm underline text-brand-blue hover:text-brand-blue-link-hover">
                   Back to Login
                 </Link>
               </div>
               <button
                 type="submit"
                 disabled={isLoading || !newPassword || !confirmPassword || !allValid || !passwordsMatch}
-                className="w-full cursor-pointer bg-[#0074BF] hover:bg-[#05609c] disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full cursor-pointer bg-brand-blue hover:bg-brand-blue-hover disabled:opacity-50 disabled:cursor-not-allowed font-heading text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 {isLoading ? 'Setting password...' : 'Set Password'}
               </button>

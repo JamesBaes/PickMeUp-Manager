@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/utils/server";
 
 export const handleSubmit = async (email: string) => {
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
 
   // look for if the email exists or not
   const { data, error } = await supabase

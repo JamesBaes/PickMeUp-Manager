@@ -3,13 +3,7 @@
 import { useState } from 'react'
 import type { Order, OrderStatus } from '@/types'
 
-const STATUS_STYLES: Record<OrderStatus, string> = {
-  paid:        'bg-white text-gray-600 border border-gray-200',
-  in_progress: 'bg-white text-gray-600 border border-gray-200',
-  ready:       'bg-white text-gray-600 border border-gray-200',
-  completed:   'bg-white text-gray-600 border border-gray-200',
-  refunded:    'bg-white text-gray-600 border border-gray-200',
-}
+const STATUS_BADGE = 'bg-white text-gray-600 border border-gray-200'
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   paid:        'Paid',
@@ -121,7 +115,7 @@ export default function OrderHistoryTable({ orders }: { orders: Order[] }) {
                   <span className="text-sm text-gray-700">${(order.total_cents / 100).toFixed(2)}</span>
                 </td>
                 <td className="py-3">
-                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[order.status as OrderStatus]}`}>
+                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE}`}>
                     {STATUS_LABELS[order.status as OrderStatus] ?? order.status}
                     <span className="text-gray-400">›</span>
                   </span>
