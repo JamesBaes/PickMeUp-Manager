@@ -105,7 +105,6 @@ export default function OrdersTable() {
                 <td className="py-3">
                   <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-body font-medium border ${statusStyles[order.status as OrderStatus] ?? "bg-gray-100 text-gray-500 border-gray-200"}`}>
                     {STATUS_LABELS[order.status as OrderStatus] ?? order.status}
-                    <ChevronDown size={10} />
                   </span>
                 </td>
               </tr>
