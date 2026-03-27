@@ -81,13 +81,13 @@ const AdminPage = () => {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow overflow-x-auto">
-        <table className="min-w-full">
+        <table className="min-w-full table-fixed">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Name</th>
-              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Role</th>
-              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Email</th>
-              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500">Location</th>
+              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500 w-40">Name</th>
+              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500 w-24">Role</th>
+              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500 w-48">Email</th>
+              <th className="py-4 px-4 md:px-6 text-left text-sm md:text-base font-semibold text-gray-500 w-36">Location</th>
               <th />
             </tr>
           </thead>
@@ -99,12 +99,12 @@ const AdminPage = () => {
                     <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 text-base shrink-0">
                       {admin.name[0].toUpperCase()}
                     </div>
-                    <span className="text-sm md:text-base font-semibold">{admin.name}</span>
+                    <span className="text-sm md:text-base font-semibold truncate max-w-[120px]">{admin.name}</span>
                   </div>
                 </td>
                 <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{admin.role}</td>
-                <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{admin.email}</td>
-                <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600">{getLocationName(admin.restaurant_id)}</td>
+                <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600 max-w-[180px]"><span className="block truncate">{admin.email}</span></td>
+                <td className="py-4 px-4 md:px-6 text-sm md:text-base text-gray-600 max-w-[140px]"><span className="block truncate">{getLocationName(admin.restaurant_id)}</span></td>
                 <td className="py-4 px-4 md:px-6 text-right">
                   <button
                     onClick={() => setAdminToDelete(admin)}
